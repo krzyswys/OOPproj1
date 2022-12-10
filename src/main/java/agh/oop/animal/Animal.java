@@ -19,10 +19,11 @@ public class Animal extends AbstractMapElement {
     private int plantsEaten = 0;
     private int kids = 0;
 
-    public Animal(Map map, Vector2d position, int energy, int genomeLength, int mutations, INextGene nextGeneGenerator, IGeneMutator geneMutator) {
+    public Animal(Map map, Vector2d position, int energy, int genomeLength, int mutationAmount,
+                  INextGene nextGeneGenerator, IGeneMutator geneMutator) {
         this.map = map;
-        observerList.add(map);
-        this.location = position;
+        addObserver(map);
+        this.position = position;
         this.energy = energy;
         this.nextGeneGenerator = nextGeneGenerator;
         this.geneMutator = geneMutator;
@@ -48,7 +49,9 @@ public class Animal extends AbstractMapElement {
 
     public void move() {
         timeAlive += 1;
+        notifyObservers(ActionType.POSITION_CHANGED);
         map.move(this);
+        this.removeEnergy(1);
         activeGene = nextGeneGenerator.NextGene(activeGene, genome.size());
     }
 
@@ -60,7 +63,7 @@ public class Animal extends AbstractMapElement {
     }
 
     public Vector2d nextPosition() {
-        return this.getLocation().add(MapDirection.fromNumber(genome.get(activeGene)).toUnitVector());
+        return this.getPosition().add(MapDirection.fromNumber(genome.get(activeGene)).toUnitVector());
     }
 
     private void addObserver(IAnimalObserver o) {
@@ -85,7 +88,7 @@ public class Animal extends AbstractMapElement {
     @Override
     public String toString() {
         return "Animal{" +
-                "position=" + location +
+                "position=" + position +
                 ", energy=" + energy +
                 ", genome=" + genome +
                 ", activeGene=" + activeGene +
@@ -94,4 +97,8 @@ public class Animal extends AbstractMapElement {
                 ", kids=" + kids +
                 '}';
     }
+//    @Override
+//    public String toString() {
+//        return String.valueOf(genome.get(activeGene));
+//    }
 }
