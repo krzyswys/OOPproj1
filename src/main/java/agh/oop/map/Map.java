@@ -7,27 +7,22 @@ import agh.oop.animal.Animal;
 
 public class Map implements IWorldMap, IAnimalObserver {
     MapSize size = new MapSize(10,10);
-    private final IMove AnimalMover = new MoveEarth();
     @Override
     public void positionChanged(Animal animal) {
         Vector2d oldLocation = animal.getPosition();
-        Vector2d newLocation = this.newLocation(animal.nextPosition());
+        Vector2d newLocation = this.newLocation(animal.nextPosition()).newPosition;
     }
     @Override
     public void death(Animal animal) {
         System.out.println("dead");
     }
 
-    @Override
-    public void move(Animal animal) {
-        AnimalMover.move(animal, this);
-    }
-
-    public Vector2d newLocation(Vector2d location) {
-        return new Vector2d(
-                (location.getX() + size.getWidth()) % size.getWidth(),
-                (location.getY() + size.getHeight()) % size.getHeight()
-        );
+    public ChangePositionMessage newLocation(Vector2d location) {
+        // TODO: move to intervaace
+        return new ChangePositionMessage(
+                new Vector2d((location.getX() + size.getWidth()) % size.getWidth(),
+                (location.getY() + size.getHeight()) % size.getHeight()),
+                0);
     }
 
     @Override
