@@ -11,7 +11,7 @@ import java.util.List;
 public class Animal extends AbstractMapElement {
     private final List<Integer> genome = new ArrayList<>();
     private final List<IAnimalObserver> observerList = new ArrayList<>();
-    private final IWorldMap map;
+    private final Map map;
     private final INextGene nextGeneGenerator;
     private final IGeneMutator geneMutator;
     private int activeGene = 0;
@@ -50,8 +50,9 @@ public class Animal extends AbstractMapElement {
     public void move() {
         timeAlive += 1;
         notifyObservers(ActionType.POSITION_CHANGED);
-        map.move(this);
-        this.removeEnergy(1);
+        var newLocation = map.newLocation(this.nextPosition());
+        this.setPosition(newLocation.newPosition);
+        this.removeEnergy(1 + newLocation.energyCost);
         activeGene = nextGeneGenerator.NextGene(activeGene, genome.size());
     }
 
