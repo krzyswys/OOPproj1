@@ -37,14 +37,34 @@ public class Animal extends AbstractMapElement {
         this(map, position, 12, 5, 2, new NextGeneNormal(), new MutatorRandom());
     }
 
-    public Animal(Animal parent1, Animal parent2) {
+    protected Animal(int energy) {
+        this(new Map(), new Vector2d(0, 0), energy, 10, 2, new NextGeneNormal(), new MutatorRandom());
+    }
+
+    public Animal(Animal parent1, Animal parent2, int energyFromParents) {
         this.map = parent1.map;
+        this.position = parent1.position;
         this.observerList.addAll(parent1.observerList);
         this.nextGeneGenerator = parent1.nextGeneGenerator;
         this.geneMutator = parent1.geneMutator;
 
+
+
         //TODO:
-        this.genome.addAll(parent1.genome);
+        int totalEnergy = parent1.energy + parent2.energy;
+        int genomeLength = parent1.genome.size();
+        int a = Math.round(((float) parent1.energy / totalEnergy) * (genomeLength));
+        if (ThreadLocalRandom.current().nextBoolean()) {
+            this.genome.addAll(parent1.genome.subList(0, a));
+            this.genome.addAll(parent2.genome.subList(a, genomeLength));
+        } else {
+            this.genome.addAll(parent2.genome.subList(0, genomeLength - a));
+            this.genome.addAll(parent1.genome.subList(genomeLength - a, genomeLength));
+        }
+
+        this.energy = energyFromParents*2;
+        parent1.removeEnergy(energyFromParents);
+        parent2.removeEnergy(energyFromParents);
     }
 
     public void move() {
@@ -81,6 +101,10 @@ public class Animal extends AbstractMapElement {
 
     public int getKids() {
         return kids;
+    }
+
+    public List<Integer> getGenome() {
+        return new ArrayList<>(genome);
     }
 
     public Vector2d nextPosition() {
