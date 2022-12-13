@@ -60,6 +60,7 @@ public class Animal extends AbstractMapElement {
         energy -= amount;
         if (energy <= 0) {
             notifyObservers(ActionType.DEATH);
+            //czy tu nie powinno się ubjać zwierzaka?
         }
     }
 

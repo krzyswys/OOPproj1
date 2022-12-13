@@ -7,6 +7,7 @@ import agh.oop.animal.Animal;
 
 public class Map implements IWorldMap, IAnimalObserver {
     MapSize size = new MapSize(10,10);
+    private MapVisualizer visualizer = new MapVisualizer(this);
     @Override
     public void positionChanged(Animal animal) {
         Vector2d oldLocation = animal.getPosition();
@@ -44,4 +45,5 @@ public class Map implements IWorldMap, IAnimalObserver {
     public MapSize getSize() {
         return size;
     }
+
 }

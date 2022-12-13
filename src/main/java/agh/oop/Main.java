@@ -14,6 +14,7 @@ public class Main {
             System.out.println(a);
         }
         MapVisualizer mapVisualizer = new MapVisualizer(map);
+        //adaed
         System.out.println(mapVisualizer.draw(
                 new Vector2d(0, 0), new Vector2d(map.getSize().getHeight(), map.getSize().getWidth())));
 
