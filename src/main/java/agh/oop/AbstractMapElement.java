@@ -15,4 +15,8 @@ public abstract class AbstractMapElement {
     boolean isAt(Vector2d position) {
         return this.position.equals(position);
     }
+
+    public int getEnergy() {
+        return energy;
+    }
 }
