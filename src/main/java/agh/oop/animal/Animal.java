@@ -63,6 +63,26 @@ public class Animal extends AbstractMapElement {
         }
     }
 
+    public void addEnergy(int amount) {
+        energy += amount;
+    }
+
+    public int getActiveGene() {
+        return activeGene;
+    }
+
+    public int getTimeAlive() {
+        return timeAlive;
+    }
+
+    public int getPlantsEaten() {
+        return plantsEaten;
+    }
+
+    public int getKids() {
+        return kids;
+    }
+
     public Vector2d nextPosition() {
         return this.getPosition().add(MapDirection.fromNumber(genome.get(activeGene)).toUnitVector());
     }
