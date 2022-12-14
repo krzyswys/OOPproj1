@@ -10,30 +10,41 @@ import agh.oop.plant.Trees;
 
 import java.util.*;
 
-public abstract class WorldMap implements IWorldMap, IAnimalObserver {
+public class WorldMap implements IWorldMap, IAnimalObserver {
     private MapVisualizer visualizer = new MapVisualizer(this);
     private List<Animal> animals = new ArrayList<>();
     private List<Plant> plants = new ArrayList<>();
     private List<Animal> deadAnimals = new ArrayList<>();
     IPlantType plantType;
+    IMapType mapType;
     MapSize size;
-
     HashMap<Vector2d, Integer> deadAnimalsPerVector = new HashMap<Vector2d, Integer>();
-    public List<Animal> getDeadAnimals(){
+
+    public WorldMap(MapSize size, IMapType mapType, IPlantType plantType) {
+        this.plantType = plantType;
+        this.mapType = mapType;
+        this.size = size;
+    }
+
+    public List<Animal> getDeadAnimals() {
         return deadAnimals;
     }
-    public List<Animal> getAnimals(){
+
+    public List<Animal> getAnimals() {
         return animals;
     }
-    public List<Plant> getPlants(){
+
+    public List<Plant> getPlants() {
         return plants;
     }
-    public HashMap<Vector2d, Integer> getDeadAnimalsPerVector(){
+
+    public HashMap<Vector2d, Integer> getDeadAnimalsPerVector() {
         return deadAnimalsPerVector;
     }
+
     @Override
     public String toString() {
-        return visualizer.draw(new Vector2d(0,0), new Vector2d(size.getWidth(), size.getHeight()));
+        return visualizer.draw(new Vector2d(0, 0), new Vector2d(size.getWidth(), size.getHeight()));
     }
 
     @Override
@@ -50,20 +61,24 @@ public abstract class WorldMap implements IWorldMap, IAnimalObserver {
             deadAnimalsPerVector.put(animal.getPosition(), num + 1);
         } else {
             deadAnimalsPerVector.put(animal.getPosition(), 1);
-
         }
         animals.remove(animal);
     }
 
-
-    @Override
-    public void createAnimalAt(Vector2d position) {
-        Animal animal = new Animal(this, position);
+    public void addAnimal(Animal animal) {
         animals.add(animal);
     }
-    @Override
+
+
+    public Animal createAnimalAt(Vector2d position) {
+        Animal animal = new Animal(this, position);
+        animals.add(animal);
+        return animal;
+    }
+
+
     public void createPlantAt(Vector2d position) {
-        Plant plant = new Plant(this, position, 5, plantType);
+        Plant plant = new Plant(position, 5);
         plants.add(plant);
     }
 
@@ -74,8 +89,8 @@ public abstract class WorldMap implements IWorldMap, IAnimalObserver {
                 return true;
             }
         }
-        for (Plant plant : plants){
-            if(position.equals(plant.getPosition())){
+        for (Plant plant : plants) {
+            if (position.equals(plant.getPosition())) {
                 return true;
             }
         }
@@ -89,8 +104,8 @@ public abstract class WorldMap implements IWorldMap, IAnimalObserver {
                 return animal;
             }
         }
-        for (Plant plant : plants){
-            if(position.equals(plant.getPosition())){
+        for (Plant plant : plants) {
+            if (position.equals(plant.getPosition())) {
                 return plant;
             }
         }
@@ -102,7 +117,7 @@ public abstract class WorldMap implements IWorldMap, IAnimalObserver {
         return size;
     }
 
-    @Override
+
     public int getAutosomalDominant() {
         int[] geneCount = {0, 0, 0, 0, 0, 0, 0, 0};
         for (Animal animal : animals) {
@@ -112,7 +127,7 @@ public abstract class WorldMap implements IWorldMap, IAnimalObserver {
         return geneCount[7];
     }
 
-    @Override
+
     public long getAverageEnergy() {
         double energy = 0.0;
         for (Animal animal : animals) {
@@ -122,7 +137,7 @@ public abstract class WorldMap implements IWorldMap, IAnimalObserver {
         return Math.round(energy / animals.size());
     }
 
-    @Override
+
     public long getAverageLifespan() {
         double lifespan = 0.0;
         for (Animal animal : animals) {
@@ -134,9 +149,9 @@ public abstract class WorldMap implements IWorldMap, IAnimalObserver {
     }
 
 
-    public abstract ChangePosition newLocation(Vector2d location) ;
-
-
+    public ChangePosition newLocation(Vector2d location) {
+        return mapType.newLocation(this.size,location);
+}
 
 
 }
