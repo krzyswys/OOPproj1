@@ -4,20 +4,37 @@ import agh.oop.animal.IAnimalObserver;
 import agh.oop.IWorldMap;
 import agh.oop.Vector2d;
 import agh.oop.animal.Animal;
+import agh.oop.plant.IPlantType;
+import agh.oop.plant.Plant;
+import agh.oop.plant.Trees;
 
 import java.util.*;
-import java.util.stream.Stream;
 
-public class WorldMap implements IWorldMap, IAnimalObserver { //abstract
-    MapSize size = new MapSize(10, 10);
+public abstract class WorldMap implements IWorldMap, IAnimalObserver {
     private MapVisualizer visualizer = new MapVisualizer(this);
     private List<Animal> animals = new ArrayList<>();
-    private List<Integer> plants = new ArrayList<>();
-    private List<Integer> fertileLocations = new ArrayList<>();
-    private List<Animal> deadAnimals = new ArrayList<Animal>();
-
+    private List<Plant> plants = new ArrayList<>();
+    private List<Animal> deadAnimals = new ArrayList<>();
+    IPlantType plantType;
+    MapSize size;
 
     HashMap<Vector2d, Integer> deadAnimalsPerVector = new HashMap<Vector2d, Integer>();
+    public List<Animal> getDeadAnimals(){
+        return deadAnimals;
+    }
+    public List<Animal> getAnimals(){
+        return animals;
+    }
+    public List<Plant> getPlants(){
+        return plants;
+    }
+    public HashMap<Vector2d, Integer> getDeadAnimalsPerVector(){
+        return deadAnimalsPerVector;
+    }
+    @Override
+    public String toString() {
+        return visualizer.draw(new Vector2d(0,0), new Vector2d(size.getWidth(), size.getHeight()));
+    }
 
     @Override
     public void positionChanged(Animal animal) {
@@ -35,7 +52,6 @@ public class WorldMap implements IWorldMap, IAnimalObserver { //abstract
             deadAnimalsPerVector.put(animal.getPosition(), 1);
 
         }
-        //deaths per sqare
         animals.remove(animal);
     }
 
@@ -45,11 +61,11 @@ public class WorldMap implements IWorldMap, IAnimalObserver { //abstract
         Animal animal = new Animal(this, position);
         animals.add(animal);
     }
-//    @Override
-//    public void createGrassAt(Vector2d position) {
-//        Plant plant = new Plant(this, position);
-//        plants.add(plant);
-//    }
+    @Override
+    public void createPlantAt(Vector2d position) {
+        Plant plant = new Plant(this, position, 5, plantType);
+        plants.add(plant);
+    }
 
     @Override
     public boolean isOccupied(Vector2d position) {
@@ -58,11 +74,11 @@ public class WorldMap implements IWorldMap, IAnimalObserver { //abstract
                 return true;
             }
         }
-//        for (Plant plant : plants){
-//            if(position.equals(plant.getPosition())){
-//                return true;
-//            }
-//        }
+        for (Plant plant : plants){
+            if(position.equals(plant.getPosition())){
+                return true;
+            }
+        }
         return false;
     }
 
@@ -73,11 +89,11 @@ public class WorldMap implements IWorldMap, IAnimalObserver { //abstract
                 return animal;
             }
         }
-//        for (Plant plant : plants){
-//            if(position.equals(plant.getPosition())){
-//                return plant;
-//            }
-//        }
+        for (Plant plant : plants){
+            if(position.equals(plant.getPosition())){
+                return plant;
+            }
+        }
         return null;
     }
 
@@ -118,62 +134,9 @@ public class WorldMap implements IWorldMap, IAnimalObserver { //abstract
     }
 
 
-    // TODO: (move to interface), or make this class abctract and only fertile area would go into specified map classes?
-    public ChangePosition newLocation(Vector2d location) { // used for earth and hell
-        return new ChangePosition(
-                new Vector2d((location.getX() + size.getWidth()) % size.getWidth(),
-                        (location.getY() + size.getHeight()) % size.getHeight()),
-                0);
-    }
-    // TODO: move this to specified Plant class
-    //https://www.geeksforgeeks.org/sorting-a-hashmap-according-to-values/
-    // TODO: in sortByValue return list, currently works without it but uses unnecessary space and time
+    public abstract ChangePosition newLocation(Vector2d location) ;
 
-    public static HashMap<Vector2d, Integer> sortByValue(HashMap<Vector2d, Integer> hashmap) {
-        List<Map.Entry<Vector2d, Integer>> list =
-                new LinkedList<Map.Entry<Vector2d, Integer>>(hashmap.entrySet());
 
-        Collections.sort(list, new Comparator<Map.Entry<Vector2d, Integer>>() {
-            public int compare(Map.Entry<Vector2d, Integer> first,
-                               Map.Entry<Vector2d, Integer> second) {
-                return (first.getValue()).compareTo(second.getValue());
-            }
-        });
-
-        HashMap<Vector2d, Integer> temp = new LinkedHashMap<Vector2d, Integer>();
-        for (Map.Entry<Vector2d, Integer> element : list) {
-            temp.put(element.getKey(), element.getValue());
-        }
-        return temp;
-    }
-
-    public List<Vector2d> calculateFertileAreaToxic() {
-        List<Vector2d> positionsByDeath = new ArrayList<Vector2d>();
-        HashMap<Vector2d, Integer> sortedMapOfPositions = sortByValue(deadAnimalsPerVector);
-        for (Map.Entry<Vector2d, Integer> en : sortedMapOfPositions.entrySet()) {
-            positionsByDeath.add(en.getKey());
-        }
-        return positionsByDeath;
-    }
-
-    public List<Vector2d> calculateFertileAreaTrees() {
-        List<Vector2d> positionsByDistance = new ArrayList<Vector2d>();
-        int w = size.getWidth();
-        int h = size.getHeight();
-        int i = h / 2;
-        int j = h / 2;
-        while (i < h && j >= 0) {
-            for (int k = 0; k < w; k++) {
-                // TODO: ?change it so it starts fromm middle?
-                positionsByDistance.add(new Vector2d(k, i));
-                positionsByDistance.add(new Vector2d(k, j));
-            }
-            i++;
-            i--;
-        }
-        return positionsByDistance;
-
-    }
 
 
 }
