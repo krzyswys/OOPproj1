@@ -6,37 +6,38 @@ import agh.oop.Vector2d;
 import agh.oop.animal.Animal;
 
 import java.util.*;
+import java.util.stream.Stream;
 
-public  class WorldMap implements IWorldMap, IAnimalObserver { //abstract
-    MapSize size = new MapSize(10,10);
+public class WorldMap implements IWorldMap, IAnimalObserver { //abstract
+    MapSize size = new MapSize(10, 10);
     private MapVisualizer visualizer = new MapVisualizer(this);
-    private  List<Animal> animals = new ArrayList<>();
-    private  List<Integer> plants = new ArrayList<>();
-    private  List<Integer> fertileLocations = new ArrayList<>();
+    private List<Animal> animals = new ArrayList<>();
+    private List<Integer> plants = new ArrayList<>();
+    private List<Integer> fertileLocations = new ArrayList<>();
     private List<Animal> deadAnimals = new ArrayList<Animal>();
 
 
-    Map<Vector2d, Integer> deadAnimalsPerVector = new HashMap<Vector2d,Integer>();
+    HashMap<Vector2d, Integer> deadAnimalsPerVector = new HashMap<Vector2d, Integer>();
+
     @Override
     public void positionChanged(Animal animal) {
         Vector2d oldLocation = animal.getPosition();
         Vector2d newLocation = this.newLocation(animal.nextPosition()).newPosition;
     }
+
     @Override
     public void death(Animal animal) {
         deadAnimals.add(animal);
-        if(deadAnimalsPerVector.containsValue(animal.getPosition())){
+        if (deadAnimalsPerVector.containsValue(animal.getPosition())) {
             Integer num = deadAnimalsPerVector.get(animal.getPosition());
-            deadAnimalsPerVector.put(animal.getPosition(), num+1);
-        }
-        else {
+            deadAnimalsPerVector.put(animal.getPosition(), num + 1);
+        } else {
             deadAnimalsPerVector.put(animal.getPosition(), 1);
 
         }
         //deaths per sqare
         animals.remove(animal);
     }
-
 
 
     @Override
@@ -52,8 +53,8 @@ public  class WorldMap implements IWorldMap, IAnimalObserver { //abstract
 
     @Override
     public boolean isOccupied(Vector2d position) {
-        for (Animal animal : animals){
-            if(position.equals(animal.getPosition())){
+        for (Animal animal : animals) {
+            if (position.equals(animal.getPosition())) {
                 return true;
             }
         }
@@ -67,8 +68,8 @@ public  class WorldMap implements IWorldMap, IAnimalObserver { //abstract
 
     @Override
     public Object objectAt(Vector2d position) {
-        for (Animal animal : animals){
-            if(position.equals(animal.getPosition())){
+        for (Animal animal : animals) {
+            if (position.equals(animal.getPosition())) {
                 return animal;
             }
         }
@@ -87,9 +88,9 @@ public  class WorldMap implements IWorldMap, IAnimalObserver { //abstract
 
     @Override
     public int getAutosomalDominant() {
-        int[] geneCount = {0,0,0,0,0,0,0,0};
-        for (Animal animal : animals){
-           geneCount[animal.getActiveGene()]++;
+        int[] geneCount = {0, 0, 0, 0, 0, 0, 0, 0};
+        for (Animal animal : animals) {
+            geneCount[animal.getActiveGene()]++;
         }
         Arrays.sort(geneCount);
         return geneCount[7];
@@ -97,35 +98,82 @@ public  class WorldMap implements IWorldMap, IAnimalObserver { //abstract
 
     @Override
     public long getAverageEnergy() {
-        double energy =0.0;
-        for (Animal animal : animals){
-            energy+=animal.getEnergy();
+        double energy = 0.0;
+        for (Animal animal : animals) {
+            energy += animal.getEnergy();
         }
 
-        return  Math.round(energy/animals.size());
+        return Math.round(energy / animals.size());
     }
 
     @Override
     public long getAverageLifespan() {
-        double lifespan =0.0;
-        for (Animal animal : animals){
-            lifespan+=animal.getEnergy();
+        double lifespan = 0.0;
+        for (Animal animal : animals) {
+            lifespan += animal.getEnergy();
         }
 
-        return  Math.round(lifespan/animals.size());
+        return Math.round(lifespan / animals.size());
 
     }
 
 
-    // TODO: move to interface
-    public ChangePosition newLocation(Vector2d location) {
+    // TODO: (move to interface), or make this class abctract and only fertile area would go into specified map classes?
+    public ChangePosition newLocation(Vector2d location) { // used for earth and hell
         return new ChangePosition(
                 new Vector2d((location.getX() + size.getWidth()) % size.getWidth(),
                         (location.getY() + size.getHeight()) % size.getHeight()),
                 0);
     }
+    // TODO: move this to specified Plant class
+    //https://www.geeksforgeeks.org/sorting-a-hashmap-according-to-values/
+    // TODO: in sortByValue return list, currently works without it but uses unnecessary space and time
 
-//    public List<Integer> calculateFertileAreaToxic(){
-//
-//    }
+    public static HashMap<Vector2d, Integer> sortByValue(HashMap<Vector2d, Integer> hashmap) {
+        List<Map.Entry<Vector2d, Integer>> list =
+                new LinkedList<Map.Entry<Vector2d, Integer>>(hashmap.entrySet());
+
+        Collections.sort(list, new Comparator<Map.Entry<Vector2d, Integer>>() {
+            public int compare(Map.Entry<Vector2d, Integer> first,
+                               Map.Entry<Vector2d, Integer> second) {
+                return (first.getValue()).compareTo(second.getValue());
+            }
+        });
+
+        HashMap<Vector2d, Integer> temp = new LinkedHashMap<Vector2d, Integer>();
+        for (Map.Entry<Vector2d, Integer> element : list) {
+            temp.put(element.getKey(), element.getValue());
+        }
+        return temp;
+    }
+
+    public List<Vector2d> calculateFertileAreaToxic() {
+        List<Vector2d> positionsByDeath = new ArrayList<Vector2d>();
+        HashMap<Vector2d, Integer> sortedMapOfPositions = sortByValue(deadAnimalsPerVector);
+        for (Map.Entry<Vector2d, Integer> en : sortedMapOfPositions.entrySet()) {
+            positionsByDeath.add(en.getKey());
+        }
+        return positionsByDeath;
+    }
+
+    public List<Vector2d> calculateFertileAreaTrees() {
+        List<Vector2d> positionsByDistance = new ArrayList<Vector2d>();
+        int w = size.getWidth();
+        int h = size.getHeight();
+        int i = h / 2;
+        int j = h / 2;
+        while (i < h && j >= 0) {
+            for (int k = 0; k < w; k++) {
+                // TODO: ?change it so it starts fromm middle?
+                positionsByDistance.add(new Vector2d(k, i));
+                positionsByDistance.add(new Vector2d(k, j));
+            }
+            i++;
+            i--;
+        }
+        return positionsByDistance;
+
+    }
+
+
 }
