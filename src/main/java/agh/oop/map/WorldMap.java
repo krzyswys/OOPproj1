@@ -19,21 +19,26 @@ public abstract class WorldMap implements IWorldMap, IAnimalObserver {
     MapSize size;
 
     HashMap<Vector2d, Integer> deadAnimalsPerVector = new HashMap<Vector2d, Integer>();
-    public List<Animal> getDeadAnimals(){
+
+    public List<Animal> getDeadAnimals() {
         return deadAnimals;
     }
-    public List<Animal> getAnimals(){
+
+    public List<Animal> getAnimals() {
         return animals;
     }
-    public List<Plant> getPlants(){
+
+    public List<Plant> getPlants() {
         return plants;
     }
-    public HashMap<Vector2d, Integer> getDeadAnimalsPerVector(){
+
+    public HashMap<Vector2d, Integer> getDeadAnimalsPerVector() {
         return deadAnimalsPerVector;
     }
+
     @Override
     public String toString() {
-        return visualizer.draw(new Vector2d(0,0), new Vector2d(size.getWidth(), size.getHeight()));
+        return visualizer.draw(new Vector2d(0, 0), new Vector2d(size.getWidth(), size.getHeight()));
     }
 
     @Override
@@ -55,15 +60,19 @@ public abstract class WorldMap implements IWorldMap, IAnimalObserver {
         animals.remove(animal);
     }
 
+    public void addAnimal(Animal animal) {
+        animals.add(animal);
+    }
 
     @Override
     public void createAnimalAt(Vector2d position) {
         Animal animal = new Animal(this, position);
         animals.add(animal);
     }
+
     @Override
     public void createPlantAt(Vector2d position) {
-        Plant plant = new Plant(this, position, 5, plantType);
+        Plant plant = new Plant(position, 5);
         plants.add(plant);
     }
 
@@ -74,8 +83,8 @@ public abstract class WorldMap implements IWorldMap, IAnimalObserver {
                 return true;
             }
         }
-        for (Plant plant : plants){
-            if(position.equals(plant.getPosition())){
+        for (Plant plant : plants) {
+            if (position.equals(plant.getPosition())) {
                 return true;
             }
         }
@@ -89,8 +98,8 @@ public abstract class WorldMap implements IWorldMap, IAnimalObserver {
                 return animal;
             }
         }
-        for (Plant plant : plants){
-            if(position.equals(plant.getPosition())){
+        for (Plant plant : plants) {
+            if (position.equals(plant.getPosition())) {
                 return plant;
             }
         }
@@ -134,9 +143,7 @@ public abstract class WorldMap implements IWorldMap, IAnimalObserver {
     }
 
 
-    public abstract ChangePosition newLocation(Vector2d location) ;
-
-
+    public abstract ChangePosition newLocation(Vector2d location);
 
 
 }

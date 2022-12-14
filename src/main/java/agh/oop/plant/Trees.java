@@ -16,12 +16,12 @@ public class Trees implements IPlantType{
         int j = h / 2;
         while (i < h && j >= 0) {
             for (int k = 0; k < w; k++) {
-                // TODO: ?change it so it starts fromm middle?
+                // TODO: ?change it so it starts from middle?
                 positionsByDistance.add(new Vector2d(k, i));
                 positionsByDistance.add(new Vector2d(k, j));
             }
             i++;
-            i--;
+            j--;
         }
         return positionsByDistance;
 
