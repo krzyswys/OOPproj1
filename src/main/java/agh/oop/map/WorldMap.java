@@ -10,15 +10,21 @@ import agh.oop.plant.Trees;
 
 import java.util.*;
 
-public abstract class WorldMap implements IWorldMap, IAnimalObserver {
+public class WorldMap implements IWorldMap, IAnimalObserver {
     private MapVisualizer visualizer = new MapVisualizer(this);
     private List<Animal> animals = new ArrayList<>();
     private List<Plant> plants = new ArrayList<>();
     private List<Animal> deadAnimals = new ArrayList<>();
     IPlantType plantType;
+    IMapType mapType;
     MapSize size;
-
     HashMap<Vector2d, Integer> deadAnimalsPerVector = new HashMap<Vector2d, Integer>();
+
+    public WorldMap(MapSize size, IMapType mapType, IPlantType plantType) {
+        this.plantType = plantType;
+        this.mapType = mapType;
+        this.size = size;
+    }
 
     public List<Animal> getDeadAnimals() {
         return deadAnimals;
@@ -55,7 +61,6 @@ public abstract class WorldMap implements IWorldMap, IAnimalObserver {
             deadAnimalsPerVector.put(animal.getPosition(), num + 1);
         } else {
             deadAnimalsPerVector.put(animal.getPosition(), 1);
-
         }
         animals.remove(animal);
     }
@@ -64,13 +69,14 @@ public abstract class WorldMap implements IWorldMap, IAnimalObserver {
         animals.add(animal);
     }
 
-    @Override
-    public void createAnimalAt(Vector2d position) {
+
+    public Animal createAnimalAt(Vector2d position) {
         Animal animal = new Animal(this, position);
         animals.add(animal);
+        return animal;
     }
 
-    @Override
+
     public void createPlantAt(Vector2d position) {
         Plant plant = new Plant(position, 5);
         plants.add(plant);
@@ -111,7 +117,7 @@ public abstract class WorldMap implements IWorldMap, IAnimalObserver {
         return size;
     }
 
-    @Override
+
     public int getAutosomalDominant() {
         int[] geneCount = {0, 0, 0, 0, 0, 0, 0, 0};
         for (Animal animal : animals) {
@@ -121,7 +127,7 @@ public abstract class WorldMap implements IWorldMap, IAnimalObserver {
         return geneCount[7];
     }
 
-    @Override
+
     public long getAverageEnergy() {
         double energy = 0.0;
         for (Animal animal : animals) {
@@ -131,7 +137,7 @@ public abstract class WorldMap implements IWorldMap, IAnimalObserver {
         return Math.round(energy / animals.size());
     }
 
-    @Override
+
     public long getAverageLifespan() {
         double lifespan = 0.0;
         for (Animal animal : animals) {
@@ -143,7 +149,9 @@ public abstract class WorldMap implements IWorldMap, IAnimalObserver {
     }
 
 
-    public abstract ChangePosition newLocation(Vector2d location);
+    public ChangePosition newLocation(Vector2d location) {
+        return mapType.newLocation(this.size,location);
+}
 
 
 }

@@ -3,14 +3,9 @@ package agh.oop.map;
 import agh.oop.Vector2d;
 import agh.oop.plant.IPlantType;
 
-public class Earth extends WorldMap {
-    public Earth(int sizeOfMap, IPlantType plantType) {
-        this.size = new MapSize(sizeOfMap, sizeOfMap);
-        this.plantType = plantType;
-    }
-
+public class Earth implements IMapType {
     @Override
-    public ChangePosition newLocation(Vector2d location) {
+    public ChangePosition newLocation(MapSize size, Vector2d location) {
         return new ChangePosition(
                 new Vector2d((location.getX() + size.getWidth()) % size.getWidth(),
                         (location.getY() + size.getHeight()) % size.getHeight()),
