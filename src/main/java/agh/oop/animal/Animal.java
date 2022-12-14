@@ -1,7 +1,7 @@
 package agh.oop.animal;
 
 import agh.oop.*;
-import agh.oop.map.Map;
+import agh.oop.map.WorldMap;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -11,7 +11,7 @@ import java.util.List;
 public class Animal extends AbstractMapElement {
     private final List<Integer> genome = new ArrayList<>();
     private final List<IAnimalObserver> observerList = new ArrayList<>();
-    private final Map map;
+    private final WorldMap map;
     private final INextGene nextGeneGenerator;
     private final IGeneMutator geneMutator;
     private int activeGene = 0;
@@ -19,7 +19,7 @@ public class Animal extends AbstractMapElement {
     private int plantsEaten = 0;
     private int kids = 0;
 
-    public Animal(Map map, Vector2d position, int energy, int genomeLength, int mutationAmount,
+    public Animal(WorldMap map, Vector2d position, int energy, int genomeLength, int mutationAmount,
                   INextGene nextGeneGenerator, IGeneMutator geneMutator) {
         this.map = map;
         addObserver(map);
@@ -33,7 +33,7 @@ public class Animal extends AbstractMapElement {
         }
     }
 
-    public Animal(Map map, Vector2d position) {
+    public Animal(WorldMap map, Vector2d position) {
         this(map, position, 10, 5, 2, new NextGeneNormal(), new MutatorRandom());
     }
 
@@ -60,7 +60,6 @@ public class Animal extends AbstractMapElement {
         energy -= amount;
         if (energy <= 0) {
             notifyObservers(ActionType.DEATH);
-            //czy tu nie powinno się ubjać zwierzaka?
         }
     }
 
