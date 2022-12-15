@@ -11,4 +11,5 @@ public class Earth implements IMapType {
                         (location.getY() + size.getHeight()) % size.getHeight()),
                 0);
     }
+
 }

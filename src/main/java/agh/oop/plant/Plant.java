@@ -14,10 +14,12 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Plant extends AbstractMapElement {
+    IPlantType plantType;
 
-    public Plant(Vector2d position, int energy) {
+    public Plant(Vector2d position, int energy, IPlantType plantType) {
         this.energy = energy;
-        this.position = (position);
+        this.position = position;
+        this.plantType = plantType;
     }
 
     @Override

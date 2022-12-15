@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface IPlantType {
     public List<Vector2d> calculateFertileArea(WorldMap map);
+    public Vector2d getFertileField(WorldMap map);
 }
