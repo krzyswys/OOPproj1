@@ -21,17 +21,16 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
     MapSize size;
     HashMap<Vector2d, Integer> deadAnimalsPerVector = new HashMap<Vector2d, Integer>();
 
-    // ile animali w konstruktorze albo metoda ad animals  add plants
-    // te rzeczy z mapek nich zwracją jedno pole
-    // rozmnażanie
-    // simulation engine
+     // simulation engine
     public WorldMap(MapSize size, IMapType mapType, IPlantType plantType) {
         this.plantType = plantType;
         this.mapType = mapType;
         this.size = size;
         for(int i=0; i< size.getWidth(); i++){
             for(int j=0; j< size.getHeight(); j++){
-                deadAnimalsPerVector.put(new Vector2d(i,j), ThreadLocalRandom.current().nextInt(0, 10));
+//                deadAnimalsPerVector.put(new Vector2d(i,j), ThreadLocalRandom.current().nextInt(0, 20));
+                deadAnimalsPerVector.put(new Vector2d(i,j), 0);
+
             }
         }
     }
@@ -79,21 +78,21 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
         animals.remove(animal);
     }
 
-    public void addAnimal(Animal animal) { //this could be used for reproduciton (if adding animal to map when created is removed)
+    public void addAnimal(Animal animal) {
         animals.add(animal);
     }
 
     public void createNAnimals(int amount) {
         for (int i = 0; i < amount; i++) {
             Vector2d position = generateRandomPosition();
-            while ((objectAt(position) instanceof Animal)) {
+            while (!(objectAt(position) instanceof Animal)) {
                 position = generateRandomPosition();
                 createAnimalAt(position);
             }
         }
     }
 
-    public void createAnimalAt(Vector2d position) { //this is to be  used when puting new animals on map
+    public void createAnimalAt(Vector2d position) {
         Animal animal = new Animal(this, position);
         animals.add(animal);
     }
@@ -111,6 +110,14 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
     public void createPlantAt(Vector2d position) {
         Plant plant = new Plant(position, 5, this.plantType);
         plants.add(plant);
+    }
+    public void removePlantAt(Vector2d position){
+        for(Plant plant : plants){
+            if(plant.getPosition().equals(position)){
+                plants.remove(plant);
+                break;
+            }
+        }
     }
 
     @Override
