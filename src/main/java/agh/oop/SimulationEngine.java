@@ -43,7 +43,7 @@ public class SimulationEngine {
             System.out.println(mapVisualizer.draw(
                     new Vector2d(0, 0), new Vector2d(map.getSize().getHeight(), map.getSize().getWidth())));
         }
-
+        System.out.println(map.getTopGeneFromAllGenomes());
 
 
     }

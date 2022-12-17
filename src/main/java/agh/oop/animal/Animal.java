@@ -1,7 +1,10 @@
 package agh.oop.animal;
 
 import agh.oop.*;
+import agh.oop.map.Earth;
+import agh.oop.map.MapSize;
 import agh.oop.map.WorldMap;
+import agh.oop.plant.Trees;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -38,10 +41,10 @@ public class Animal extends AbstractMapElement {
     }
 
     protected Animal(int energy) {
-        this(new Map(), new Vector2d(0, 0), energy, 10, 2, new NextGeneNormal(), new MutatorRandom());
+        this(new WorldMap(new MapSize(10, 10), new Earth(), new Trees()), new Vector2d(0, 0), energy, 10, 2, new NextGeneNormal(), new MutatorRandom());
     }
 
-    public Animal(Animal parent1, Animal parent2, int energyFromParents) {
+    public Animal(Animal parent1, Animal parent2, int energyFromParent) {
         this.map = parent1.map;
         this.position = parent1.position;
         this.observerList.addAll(parent1.observerList);
@@ -49,8 +52,6 @@ public class Animal extends AbstractMapElement {
         this.geneMutator = parent1.geneMutator;
 
 
-
-        //TODO:
         int totalEnergy = parent1.energy + parent2.energy;
         int genomeLength = parent1.genome.size();
         int a = Math.round(((float) parent1.energy / totalEnergy) * (genomeLength));
@@ -62,9 +63,9 @@ public class Animal extends AbstractMapElement {
             this.genome.addAll(parent1.genome.subList(genomeLength - a, genomeLength));
         }
 
-        this.energy = energyFromParents*2;
-        parent1.removeEnergy(energyFromParents);
-        parent2.removeEnergy(energyFromParents);
+        this.energy = energyFromParent * 2;
+        parent1.removeEnergy(energyFromParent);
+        parent2.removeEnergy(energyFromParent);
     }
 
     public void move() {
@@ -155,6 +156,7 @@ public class Animal extends AbstractMapElement {
                 ", kids=" + kids +
                 '}';
     }
+
     @Override
     public String toString() {
         return String.valueOf(genome.get(activeGene));
