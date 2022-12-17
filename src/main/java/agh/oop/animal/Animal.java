@@ -145,7 +145,7 @@ public class Animal extends AbstractMapElement {
 //    }
 
 
-    public String info() {
+    public String stats() {
         return "Animal{" +
                 "position=" + position +
                 ", energy=" + energy +

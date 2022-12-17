@@ -5,7 +5,6 @@ import agh.oop.animal.IGeneMutator;
 import agh.oop.animal.INextGene;
 import agh.oop.map.*;
 import agh.oop.plant.IPlantType;
-import agh.oop.plant.Toxic;
 
 import java.util.List;
 
@@ -36,14 +35,13 @@ public class SimulationEngine {
         map.createNAnimals(animalsToStart);
         map.createNPlants(plantsToStart);
         List<Animal> animals = map.getAnimals();
-        for(int i=0; i<10; i++){
-            for (Animal animal : animals) {
-                animal.move();
-            }
+        for(int i=0; i<15; i++){
+            map.cycle();
             System.out.println(mapVisualizer.draw(
                     new Vector2d(0, 0), new Vector2d(map.getSize().getHeight(), map.getSize().getWidth())));
         }
         System.out.println(map.getTopGeneFromAllGenomes());
+        System.out.println(animals.get(0).stats());
 
 
     }

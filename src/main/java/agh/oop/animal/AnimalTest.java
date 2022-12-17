@@ -2,8 +2,6 @@ package agh.oop.animal;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,9 +13,9 @@ class AnimalTest {
         Animal parent2 = new Animal(100);
         Animal kid = new Animal(parent1,parent2,5);
 
-        System.out.println(parent1.info());
-        System.out.println(parent2.info());
-        System.out.println(kid.info());
+        System.out.println(parent1.stats());
+        System.out.println(parent2.stats());
+        System.out.println(kid.stats());
 
         assertTrue( checkGenome(kid.getGenome(),parent1.getGenome(),parent2.getGenome(),1) );
 
@@ -29,9 +27,9 @@ class AnimalTest {
         Animal parent1 = new Animal(50);
         Animal parent2 = new Animal(50);
         Animal kid = new Animal(parent1,parent2,20);
-        System.out.println(parent1.info());
-        System.out.println(parent2.info());
-        System.out.println(kid.info());
+        System.out.println(parent1.stats());
+        System.out.println(parent2.stats());
+        System.out.println(kid.stats());
 
 
         assertTrue( checkGenome(kid.getGenome(),parent1.getGenome(),parent2.getGenome(),parent1.getGenome().size()/2) );

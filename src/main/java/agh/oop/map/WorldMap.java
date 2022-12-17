@@ -11,8 +11,8 @@ import agh.oop.plant.Trees;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class WorldMap implements IWorldMap, IAnimalObserver {
-    private final Map<Vector2d,List<Animal>> animals = new HashMap<>();
+public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
+    private final Map<Vector2d, List<Animal>> animals = new HashMap<>();
     private MapVisualizer visualizer = new MapVisualizer(this);
     private List<Plant> plants = new ArrayList<>();
     private List<Animal> deadAnimals = new ArrayList<>();
@@ -21,15 +21,15 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
     MapSize size;
     HashMap<Vector2d, Integer> deadAnimalsPerVector = new HashMap<Vector2d, Integer>();
 
-     // simulation engine
+    // simulation engine
     public WorldMap(MapSize size, IMapType mapType, IPlantType plantType) {
         this.plantType = plantType;
         this.mapType = mapType;
         this.size = size;
-        for(int i=0; i< size.getWidth(); i++){
-            for(int j=0; j< size.getHeight(); j++){
+        for (int i = 0; i < size.getWidth(); i++) {
+            for (int j = 0; j < size.getHeight(); j++) {
 //                deadAnimalsPerVector.put(new Vector2d(i,j), ThreadLocalRandom.current().nextInt(0, 20));
-                deadAnimalsPerVector.put(new Vector2d(i,j), 0);
+                deadAnimalsPerVector.put(new Vector2d(i, j), 0);
             }
         }
     }
@@ -65,13 +65,14 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
     public void positionChanged(Animal animal) {
         Vector2d oldLocation = animal.getPosition();
         Vector2d newLocation = this.newLocation(animal.nextPosition()).newPosition;
-
+        removeAnimal(animal);
+        addAnimal(newLocation, animal);
     }
 
     @Override
     public void death(Animal animal) {
         deadAnimals.add(animal);
-        if (deadAnimalsPerVector.containsValue(animal.getPosition())) {
+        if (deadAnimalsPerVector.containsKey(animal.getPosition())) {
             Integer num = deadAnimalsPerVector.get(animal.getPosition());
             deadAnimalsPerVector.put(animal.getPosition(), num + 1);
         } else {
@@ -81,18 +82,22 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
     }
 
     private void removeAnimal(Animal animal) {
-        Vector2d postion = animal.getPosition();
-        if(animals.containsKey(postion)) {
-            if( animals.get(postion).size() <= 1 ) {
-                animals.remove(postion);
+        Vector2d position = animal.getPosition();
+        if (animals.containsKey(position)) {
+            if (animals.get(position).size() <= 1) {
+                animals.remove(position);
             } else {
-                animals.get(postion).remove(animal);
+                animals.get(position).remove(animal);
             }
         }
     }
 
     private void addAnimal(Animal animal) {
         animals.computeIfAbsent(animal.getPosition(), k -> new ArrayList<>()).add(animal);
+    }
+
+    private void addAnimal(Vector2d position, Animal animal) {
+        animals.computeIfAbsent(position, k -> new ArrayList<>()).add(animal);
     }
 
     public void createNAnimals(int amount) {
@@ -113,7 +118,7 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
     public void createNPlants(int amount) {
         for (int i = 0; i < amount; i++) {
             Vector2d positon = plantType.getFertileField(this);
-            if (positon != null){
+            if (positon != null) {
                 createPlantAt(positon);
             }
         }
@@ -124,18 +129,20 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
         Plant plant = new Plant(position, 5, this.plantType);
         plants.add(plant);
     }
-    private void removePlantAt(Vector2d position){
-        for(Plant plant : plants){
-            if(plant.getPosition().equals(position)){
+
+    private void removePlantAt(Vector2d position) {
+        for (Plant plant : plants) {
+            if (plant.getPosition().equals(position)) {
                 plants.remove(plant);
                 break;
             }
         }
     }
 
+
     @Override
     public boolean isOccupied(Vector2d position) {
-        if ( animals.containsKey(position) ) {
+        if (animals.containsKey(position)) {
             return true;
         }
 
@@ -149,7 +156,7 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
 
     @Override
     public Object objectAt(Vector2d position) {
-        if ( animals.containsKey(position) ) {
+        if (animals.containsKey(position)) {
             return animals.get(position).get(0);
         }
         for (Plant plant : plants) {
@@ -174,12 +181,13 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
         Arrays.sort(geneCount);
         return geneCount[7];
     }
+
     public int getTopGeneFromAllGenomes() {
         int[] geneCount = {0, 0, 0, 0, 0, 0, 0, 0};
         getAnimals().forEach(a -> a.getGenome().forEach(x -> geneCount[x]++));
         int maxG = 0;
         for (int i = 0; i < geneCount.length; ++i) {
-            if( geneCount[i] > geneCount[maxG] ) {
+            if (geneCount[i] > geneCount[maxG]) {
                 maxG = i;
             }
         }
@@ -194,7 +202,6 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
 
         return Math.round(energy / getAnimals().size());
     }
-
 
     public long getAverageLifespan() {
         double lifespan = 0.0;
@@ -211,5 +218,28 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
         return mapType.newLocation(this.size, location);
     }
 
+    @Override
+    public void cleanCorpses() {
 
+    }
+
+    @Override
+    public void moveAllAnimals() {
+        getAnimals().forEach(Animal::move);
+    }
+
+    @Override
+    public void consumePlants() {
+
+    }
+
+    @Override
+    public void reproduce() {
+
+    }
+
+    @Override
+    public void regrowPlants() {
+
+    }
 }
