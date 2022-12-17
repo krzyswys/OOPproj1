@@ -1,33 +1,42 @@
 package agh.oop.animal;
 
-import agh.oop.*;
+import agh.oop.AbstractMapElement;
+import agh.oop.MapDirection;
+import agh.oop.Vector2d;
 import agh.oop.map.Earth;
 import agh.oop.map.MapSize;
 import agh.oop.map.WorldMap;
+import agh.oop.plant.Plant;
 import agh.oop.plant.Trees;
 
-import java.util.concurrent.ThreadLocalRandom;
-
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.IntStream;
 
-public class Animal extends AbstractMapElement {
+public class Animal extends AbstractMapElement implements Comparable<Animal> {
     private final List<Integer> genome = new ArrayList<>();
     private final List<IAnimalObserver> observerList = new ArrayList<>();
     private final WorldMap map;
     private final INextGene nextGeneGenerator;
     private final IGeneMutator geneMutator;
+    private final int mutationsMin;
+    private final int mutationsMax;
     private int activeGene = 0;
     private int timeAlive = 0;
     private int plantsEaten = 0;
     private int kids = 0;
 
-    public Animal(WorldMap map, Vector2d position, int energy, int genomeLength, int mutationAmount,
+    public Animal(WorldMap map, Vector2d position, int energy, int genomeLength, int mutationsMin, int mutationsMax,
                   INextGene nextGeneGenerator, IGeneMutator geneMutator) {
         this.map = map;
         addObserver(map);
         this.position = position;
         this.energy = energy;
+        this.mutationsMin = mutationsMin;
+        this.mutationsMax = mutationsMax;
         this.nextGeneGenerator = nextGeneGenerator;
         this.geneMutator = geneMutator;
 
@@ -37,11 +46,11 @@ public class Animal extends AbstractMapElement {
     }
 
     public Animal(WorldMap map, Vector2d position) {
-        this(map, position, 12, 5, 2, new NextGeneNormal(), new MutatorRandom());
+        this(map, position, 100, 5, 2, 2, new NextGeneNormal(), new MutatorRandom());
     }
 
     protected Animal(int energy) {
-        this(new WorldMap(new MapSize(10, 10), new Earth(), new Trees()), new Vector2d(0, 0), energy, 10, 2, new NextGeneNormal(), new MutatorRandom());
+        this(new WorldMap(new MapSize(10, 10), new Earth(), new Trees()), new Vector2d(0, 0), energy, 10, 0, 0, new NextGeneNormal(), new MutatorRandom());
     }
 
     public Animal(Animal parent1, Animal parent2, int energyFromParent) {
@@ -50,6 +59,8 @@ public class Animal extends AbstractMapElement {
         this.observerList.addAll(parent1.observerList);
         this.nextGeneGenerator = parent1.nextGeneGenerator;
         this.geneMutator = parent1.geneMutator;
+        this.mutationsMin = parent1.mutationsMin;
+        this.mutationsMax = parent1.mutationsMax;
 
 
         int totalEnergy = parent1.energy + parent2.energy;
@@ -63,9 +74,20 @@ public class Animal extends AbstractMapElement {
             this.genome.addAll(parent1.genome.subList(genomeLength - a, genomeLength));
         }
 
+        List<Integer> randomOrder =
+                IntStream.rangeClosed(0, genomeLength - 1).collect(ArrayList::new, List::add, List::addAll);
+        Collections.shuffle(randomOrder);
+        int numberOfMutations = ThreadLocalRandom.current().nextInt(mutationsMin, mutationsMax + 1);
+        for (int i = 0; i < numberOfMutations; ++i) {
+            int currentGene = genome.get(randomOrder.get(i));
+            genome.set(randomOrder.get(i), geneMutator.mutateGene(currentGene));
+        }
+
         this.energy = energyFromParent * 2;
         parent1.removeEnergy(energyFromParent);
         parent2.removeEnergy(energyFromParent);
+        parent1.kids++;
+        parent2.kids++;
     }
 
     public void move() {
@@ -82,6 +104,11 @@ public class Animal extends AbstractMapElement {
         if (energy <= 0) {
             notifyObservers(ActionType.DEATH);
         }
+    }
+
+    public void eat(Plant plant) {
+        ++plantsEaten;
+        addEnergy(plant.getEnergy());
     }
 
     public void addEnergy(int amount) {
@@ -160,5 +187,13 @@ public class Animal extends AbstractMapElement {
     @Override
     public String toString() {
         return String.valueOf(genome.get(activeGene));
+    }
+
+    @Override
+    public int compareTo(Animal o) {
+        return Comparator.comparing(Animal::getEnergy)
+                .thenComparing(Animal::getTimeAlive)
+                .thenComparing(Animal::getKids)
+                .compare(this, o);
     }
 }

@@ -14,6 +14,8 @@ public class SimulationEngine {
     IPlantType plantType;
     int animalsToStart;
     int plantsToStart;
+    private final int energyNeededForReproduction = 30;
+    private final int energyInheritedFromParent = 20;
 
     IGeneMutator geneMutator;
     INextGene nextGene;
@@ -35,8 +37,9 @@ public class SimulationEngine {
         map.createNAnimals(animalsToStart);
         map.createNPlants(plantsToStart);
         List<Animal> animals = map.getAnimals();
-        for(int i=0; i<15; i++){
-            map.cycle();
+        for(int i=0; i<10; i++){
+            map.cycle(energyNeededForReproduction,energyInheritedFromParent,animalsToStart);
+            System.out.println(map.getAnimals().size());
             System.out.println(mapVisualizer.draw(
                     new Vector2d(0, 0), new Vector2d(map.getSize().getHeight(), map.getSize().getWidth())));
         }

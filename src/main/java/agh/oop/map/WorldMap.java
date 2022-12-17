@@ -1,12 +1,11 @@
 package agh.oop.map;
 
-import agh.oop.animal.IAnimalObserver;
 import agh.oop.IWorldMap;
 import agh.oop.Vector2d;
 import agh.oop.animal.Animal;
+import agh.oop.animal.IAnimalObserver;
 import agh.oop.plant.IPlantType;
 import agh.oop.plant.Plant;
-import agh.oop.plant.Trees;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -117,6 +116,9 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
 
     public void createNPlants(int amount) {
         for (int i = 0; i < amount; i++) {
+            //TODO:make this plant 80% on fertile 20% non fertile
+            //TODO:when no fertile is available plant on non fertile
+            //TODO:when occupied plant on different position
             Vector2d positon = plantType.getFertileField(this);
             if (positon != null) {
                 createPlantAt(positon);
@@ -139,6 +141,14 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
         }
     }
 
+    private Plant plantAt(Vector2d position) {
+        for (Plant plant : plants) {
+            if (position.equals(plant.getPosition())) {
+                return plant;
+            }
+        }
+        return null;
+    }
 
     @Override
     public boolean isOccupied(Vector2d position) {
@@ -165,6 +175,13 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
             }
         }
         return null;
+    }
+
+    private List<Animal> getAnimalsAt(Vector2d position) {
+        List<Animal> animalsList = animals.get(position);
+        Collections.sort(animalsList);
+        Collections.reverse(animalsList);
+        return animalsList;
     }
 
     @Override
@@ -230,16 +247,33 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
 
     @Override
     public void consumePlants() {
-
+        for (var position : animals.keySet()) {
+            Plant plant = plantAt(position);
+            if (plant == null) {
+                continue;
+            }
+            getAnimalsAt(position).get(0).eat(plant);
+            removePlantAt(position);
+        }
     }
 
     @Override
-    public void reproduce() {
-
+    public void reproduce(int energyThreshold, int energyInheritedFromParent) {
+        for (var currAnimals : animals.values()) {
+            if (currAnimals.size() >= 2) {
+                Collections.sort(currAnimals);
+                Collections.reverse(currAnimals);
+                Animal parent1 = currAnimals.get(0);
+                Animal parent2 = currAnimals.get(1);
+                if (parent2.getEnergy() >= energyThreshold) {
+                    addAnimal(new Animal(parent1, parent2, energyInheritedFromParent));
+                }
+            }
+        }
     }
 
     @Override
-    public void regrowPlants() {
+    public void regrowPlants(int count) {
 
     }
 }
