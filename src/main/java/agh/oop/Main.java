@@ -1,21 +1,16 @@
 package agh.oop;
 
 import agh.oop.animal.Animal;
-import agh.oop.map.Map;
+import agh.oop.map.Earth;
+import agh.oop.map.MapSize;
+import agh.oop.map.WorldMap;
 import agh.oop.map.MapVisualizer;
+import agh.oop.plant.Toxic;
+import agh.oop.plant.Trees;
 
 public class Main {
     public static void main(String[] args) {
-        Map map = new Map();
-        Animal a = new Animal(map, new Vector2d(4, 4));
-        System.out.println(a);
-        for (int i = 0; i < 10; ++i) {
-            a.move();
-            System.out.println(a);
-        }
-        MapVisualizer mapVisualizer = new MapVisualizer(map);
-        System.out.println(mapVisualizer.draw(
-                new Vector2d(0, 0), new Vector2d(map.getSize().getHeight(), map.getSize().getWidth())));
-
+        SimulationEngine engine = new SimulationEngine(new MapSize(15,15), new Earth(), new Toxic(), 10, 90);
+        engine.run();
     }
 }
