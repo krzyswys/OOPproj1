@@ -10,19 +10,15 @@ public class Toxic implements IPlantType {
 
     @Override
     public List<Vector2d> calculateFertileArea(WorldMap map) {
-        HashMap<Vector2d, Integer> deathPerVector =map.getDeadAnimalsPerVector();
+        HashMap<Vector2d, Integer> deathPerVector = map.getdeadAnimalsPerPosition();
         HashMap<Integer, List<Vector2d>> vectorsPerDeaths = new HashMap<Integer, List<Vector2d>>();
 
-
-//        System.out.println(x.size());
-//            HashMap<Vector2d, Integer> sortedMapOfPositions = sortByValue(x);
-        for (Map.Entry<Vector2d, Integer> entry :deathPerVector.entrySet()) {
-            if( vectorsPerDeaths.get(entry.getValue()) == null){
+        for (Map.Entry<Vector2d, Integer> entry : deathPerVector.entrySet()) {
+            if (vectorsPerDeaths.get(entry.getValue()) == null) {
                 List<Vector2d> tmp = new ArrayList<Vector2d>();
                 tmp.add(entry.getKey());
                 vectorsPerDeaths.put(entry.getValue(), tmp);
-            }
-            else {
+            } else {
                 List<Vector2d> tmp = vectorsPerDeaths.get(entry.getValue());
                 tmp.add(entry.getKey());
                 vectorsPerDeaths.put(entry.getValue(), tmp);
@@ -30,7 +26,7 @@ public class Toxic implements IPlantType {
 
         }
         TreeMap<Integer, List<Vector2d>> sortedVectorPerDeaths = new TreeMap<>(vectorsPerDeaths);
-        NavigableMap<Integer, List<Vector2d>> rSortedVectorPerDeaths= sortedVectorPerDeaths.descendingMap();
+        NavigableMap<Integer, List<Vector2d>> rSortedVectorPerDeaths = sortedVectorPerDeaths.descendingMap();
         List<Vector2d> orderedFertileArea = new ArrayList<>();
         for (Map.Entry<Integer, List<Vector2d>> entry : rSortedVectorPerDeaths.entrySet()) {
             List<Vector2d> tmp = entry.getValue();
@@ -50,8 +46,7 @@ public class Toxic implements IPlantType {
         int n2 = (int) (orderedFields.size() * 0.8);
 
 
-        int[] randompic = new int[]{0, 0, 0, 0, 1}; // 0 - prefered, 1 - unpreferd
-        int decison = randompic[ThreadLocalRandom.current().nextInt(0, 5)];
+        int decison = ThreadLocalRandom.current().nextInt(0, 6) == 5 ? 1 : 0;
         if (decison == 0) {
             int i = 0;
             Vector2d position = preferedFertileArea.get(0);
@@ -59,20 +54,47 @@ public class Toxic implements IPlantType {
                 position = preferedFertileArea.get(i);
                 i++;
             }
+            if (map.objectAt(position) instanceof Plant) {
+                i = 0;
+                int x = ThreadLocalRandom.current().nextInt(0, map.getSize().getWidth());
+                int y = ThreadLocalRandom.current().nextInt(0, map.getSize().getHeight());
+                position = new Vector2d(x, y);
+                while (!(preferedFertileArea.contains(position)) && map.objectAt(position) instanceof Plant && i < n2) {
+                    x = ThreadLocalRandom.current().nextInt(0, map.getSize().getWidth());
+                    y = ThreadLocalRandom.current().nextInt(0, map.getSize().getHeight());
+                    position = new Vector2d(x, y);
+                    i++;
+                }
+            }
+            if (map.objectAt(position) instanceof Plant) {
+                return null;
+            }
+
             return position;
-        } else if (decison == 1) {
+        } else {
             int i = 0;
             int x = ThreadLocalRandom.current().nextInt(0, map.getSize().getWidth());
             int y = ThreadLocalRandom.current().nextInt(0, map.getSize().getHeight());
-            Vector2d position = new Vector2d(x,y);
+            Vector2d position = new Vector2d(x, y);
             while (!(preferedFertileArea.contains(position)) && map.objectAt(position) instanceof Plant && i < n2) {
                 x = ThreadLocalRandom.current().nextInt(0, map.getSize().getWidth());
                 y = ThreadLocalRandom.current().nextInt(0, map.getSize().getHeight());
-                position = new Vector2d(x,y);
+                position = new Vector2d(x, y);
                 i++;
             }
-            return position;
+            if (map.objectAt(position) instanceof Plant) {
+                i = 0;
+                position = preferedFertileArea.get(0);
+                while (map.objectAt(position) instanceof Plant && i < n1) {
+                    position = preferedFertileArea.get(i);
+                    i++;
+                }}
+                if (map.objectAt(position) instanceof Plant) {
+                    return null;
+                }
+                return position;
+            }
+
         }
-        return null;
     }
-}
+

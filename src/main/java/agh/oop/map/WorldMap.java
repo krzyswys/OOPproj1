@@ -4,6 +4,8 @@ import agh.oop.IWorldMap;
 import agh.oop.Vector2d;
 import agh.oop.animal.Animal;
 import agh.oop.animal.IAnimalObserver;
+import agh.oop.animal.IGeneMutator;
+import agh.oop.animal.INextGene;
 import agh.oop.plant.IPlantType;
 import agh.oop.plant.Plant;
 
@@ -12,23 +14,22 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
     private final Map<Vector2d, List<Animal>> animals = new HashMap<>();
-    private MapVisualizer visualizer = new MapVisualizer(this);
-    private List<Plant> plants = new ArrayList<>();
-    private List<Animal> deadAnimals = new ArrayList<>();
+    private final MapVisualizer visualizer = new MapVisualizer(this);
+    private final List<Plant> plants = new ArrayList<>();
+    private final List<Animal> deadAnimals = new ArrayList<>();
     IPlantType plantType;
     IMapType mapType;
     MapSize size;
-    HashMap<Vector2d, Integer> deadAnimalsPerVector = new HashMap<Vector2d, Integer>();
+    HashMap<Vector2d, Integer> deadAnimalsPerPosition = new HashMap<Vector2d, Integer>();
 
-    // simulation engine
     public WorldMap(MapSize size, IMapType mapType, IPlantType plantType) {
         this.plantType = plantType;
         this.mapType = mapType;
         this.size = size;
         for (int i = 0; i < size.getWidth(); i++) {
             for (int j = 0; j < size.getHeight(); j++) {
-//                deadAnimalsPerVector.put(new Vector2d(i,j), ThreadLocalRandom.current().nextInt(0, 20));
-                deadAnimalsPerVector.put(new Vector2d(i, j), 0);
+//                deadAnimalsPerPosition.put(new Vector2d(i,j), ThreadLocalRandom.current().nextInt(0, 20));
+                deadAnimalsPerPosition.put(new Vector2d(i, j), 0);
             }
         }
     }
@@ -51,8 +52,8 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
         return plants;
     }
 
-    public HashMap<Vector2d, Integer> getDeadAnimalsPerVector() {
-        return deadAnimalsPerVector;
+    public HashMap<Vector2d, Integer> getdeadAnimalsPerPosition() {
+        return deadAnimalsPerPosition;
     }
 
     @Override
@@ -71,12 +72,8 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
     @Override
     public void death(Animal animal) {
         deadAnimals.add(animal);
-        if (deadAnimalsPerVector.containsKey(animal.getPosition())) {
-            Integer num = deadAnimalsPerVector.get(animal.getPosition());
-            deadAnimalsPerVector.put(animal.getPosition(), num + 1);
-        } else {
-            deadAnimalsPerVector.put(animal.getPosition(), 1);
-        }
+        Integer num = deadAnimalsPerPosition.getOrDefault(animal.getPosition(), 0);
+        deadAnimalsPerPosition.put(animal.getPosition(), num + 1);
         removeAnimal(animal);
     }
 
@@ -99,12 +96,14 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
         animals.computeIfAbsent(position, k -> new ArrayList<>()).add(animal);
     }
 
-    public void createNAnimals(int amount) {
+
+    public void createNAnimals(int amount, int energy, int genomeLength, int mutationsMin, int mutationsMax, INextGene nextGeneGenerator, IGeneMutator geneMutator) {
         for (int i = 0; i < amount; i++) {
             Vector2d position = generateRandomPosition();
             while (!(objectAt(position) instanceof Animal)) {
                 position = generateRandomPosition();
-                createAnimalAt(position);
+                Animal animal = new Animal(this, position, energy, genomeLength, mutationsMin, mutationsMax, nextGeneGenerator, geneMutator);
+                addAnimal(position, animal);
             }
         }
     }
@@ -114,14 +113,15 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
         addAnimal(animal);
     }
 
-    public void createNPlants(int amount) {
+    public void createNPlants(int amount, int energy) {
         for (int i = 0; i < amount; i++) {
             //TODO:make this plant 80% on fertile 20% non fertile
             //TODO:when no fertile is available plant on non fertile
             //TODO:when occupied plant on different position
             Vector2d positon = plantType.getFertileField(this);
             if (positon != null) {
-                createPlantAt(positon);
+                Plant plant = new Plant(positon, energy, this.plantType);
+                plants.add(plant);
             }
         }
 
@@ -165,16 +165,17 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
     }
 
     @Override
-    public Object objectAt(Vector2d position) {
+    public Object objectAt(Vector2d position) { // if somwhere else is necessary to have animals checked first then new method should be mabe
+        for (Plant plant : plants) {
+            if (position.equals(plant.getPosition())) {
+                return  plant;
+            }
+        }
         if (animals.containsKey(position)) {
             return animals.get(position).get(0);
         }
-        for (Plant plant : plants) {
-            if (position.equals(plant.getPosition())) {
-                return plant;
-            }
-        }
-        return null;
+
+        return new Object();
     }
 
     private List<Animal> getAnimalsAt(Vector2d position) {
@@ -200,7 +201,7 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
     }
 
     public int getTopGeneFromAllGenomes() {
-        int[] geneCount = {0, 0, 0, 0, 0, 0, 0, 0};
+        Integer[] geneCount = {0, 0, 0, 0, 0, 0, 0, 0};
         getAnimals().forEach(a -> a.getGenome().forEach(x -> geneCount[x]++));
         int maxG = 0;
         for (int i = 0; i < geneCount.length; ++i) {
@@ -208,7 +209,8 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
                 maxG = i;
             }
         }
-        return maxG;
+        Integer max =Arrays.stream(geneCount) .max(Integer::compare).get();
+        return Arrays.asList(geneCount).indexOf(max);
     }
 
     public long getAverageEnergy() {

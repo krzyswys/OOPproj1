@@ -26,4 +26,5 @@ public class Plant extends AbstractMapElement {
     public String toString() {
         return "*";
     }
+
 }
