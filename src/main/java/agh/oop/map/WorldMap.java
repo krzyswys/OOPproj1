@@ -1,19 +1,18 @@
 package agh.oop.map;
 
-import agh.oop.animal.IAnimalObserver;
 import agh.oop.IWorldMap;
 import agh.oop.Vector2d;
 import agh.oop.animal.Animal;
+import agh.oop.animal.IAnimalObserver;
 import agh.oop.plant.IPlantType;
 import agh.oop.plant.Plant;
-import agh.oop.plant.Trees;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class WorldMap implements IWorldMap, IAnimalObserver {
+public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
+    private final Map<Vector2d, List<Animal>> animals = new HashMap<>();
     private MapVisualizer visualizer = new MapVisualizer(this);
-    private List<Animal> animals = new ArrayList<>();
     private List<Plant> plants = new ArrayList<>();
     private List<Animal> deadAnimals = new ArrayList<>();
     IPlantType plantType;
@@ -21,16 +20,15 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
     MapSize size;
     HashMap<Vector2d, Integer> deadAnimalsPerVector = new HashMap<Vector2d, Integer>();
 
-     // simulation engine
+    // simulation engine
     public WorldMap(MapSize size, IMapType mapType, IPlantType plantType) {
         this.plantType = plantType;
         this.mapType = mapType;
         this.size = size;
-        for(int i=0; i< size.getWidth(); i++){
-            for(int j=0; j< size.getHeight(); j++){
+        for (int i = 0; i < size.getWidth(); i++) {
+            for (int j = 0; j < size.getHeight(); j++) {
 //                deadAnimalsPerVector.put(new Vector2d(i,j), ThreadLocalRandom.current().nextInt(0, 20));
-                deadAnimalsPerVector.put(new Vector2d(i,j), 0);
-
+                deadAnimalsPerVector.put(new Vector2d(i, j), 0);
             }
         }
     }
@@ -44,7 +42,9 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
     }
 
     public List<Animal> getAnimals() {
-        return animals;
+        List<Animal> animalList = new ArrayList<>();
+        animals.values().forEach(animalList::addAll);
+        return animalList;
     }
 
     public List<Plant> getPlants() {
@@ -64,22 +64,39 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
     public void positionChanged(Animal animal) {
         Vector2d oldLocation = animal.getPosition();
         Vector2d newLocation = this.newLocation(animal.nextPosition()).newPosition;
+        removeAnimal(animal);
+        addAnimal(newLocation, animal);
     }
 
     @Override
     public void death(Animal animal) {
         deadAnimals.add(animal);
-        if (deadAnimalsPerVector.containsValue(animal.getPosition())) {
+        if (deadAnimalsPerVector.containsKey(animal.getPosition())) {
             Integer num = deadAnimalsPerVector.get(animal.getPosition());
             deadAnimalsPerVector.put(animal.getPosition(), num + 1);
         } else {
             deadAnimalsPerVector.put(animal.getPosition(), 1);
         }
-        animals.remove(animal);
+        removeAnimal(animal);
     }
 
-    public void addAnimal(Animal animal) {
-        animals.add(animal);
+    private void removeAnimal(Animal animal) {
+        Vector2d position = animal.getPosition();
+        if (animals.containsKey(position)) {
+            if (animals.get(position).size() <= 1) {
+                animals.remove(position);
+            } else {
+                animals.get(position).remove(animal);
+            }
+        }
+    }
+
+    private void addAnimal(Animal animal) {
+        animals.computeIfAbsent(animal.getPosition(), k -> new ArrayList<>()).add(animal);
+    }
+
+    private void addAnimal(Vector2d position, Animal animal) {
+        animals.computeIfAbsent(position, k -> new ArrayList<>()).add(animal);
     }
 
     public void createNAnimals(int amount) {
@@ -92,41 +109,53 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
         }
     }
 
-    public void createAnimalAt(Vector2d position) {
+    private void createAnimalAt(Vector2d position) {
         Animal animal = new Animal(this, position);
-        animals.add(animal);
+        addAnimal(animal);
     }
 
     public void createNPlants(int amount) {
         for (int i = 0; i < amount; i++) {
+            //TODO:make this plant 80% on fertile 20% non fertile
+            //TODO:when no fertile is available plant on non fertile
+            //TODO:when occupied plant on different position
             Vector2d positon = plantType.getFertileField(this);
-            if (positon != null){
+            if (positon != null) {
                 createPlantAt(positon);
             }
         }
 
     }
 
-    public void createPlantAt(Vector2d position) {
+    private void createPlantAt(Vector2d position) {
         Plant plant = new Plant(position, 5, this.plantType);
         plants.add(plant);
     }
-    public void removePlantAt(Vector2d position){
-        for(Plant plant : plants){
-            if(plant.getPosition().equals(position)){
+
+    private void removePlantAt(Vector2d position) {
+        for (Plant plant : plants) {
+            if (plant.getPosition().equals(position)) {
                 plants.remove(plant);
                 break;
             }
         }
     }
 
-    @Override
-    public boolean isOccupied(Vector2d position) {
-        for (Animal animal : animals) {
-            if (position.equals(animal.getPosition())) {
-                return true;
+    private Plant plantAt(Vector2d position) {
+        for (Plant plant : plants) {
+            if (position.equals(plant.getPosition())) {
+                return plant;
             }
         }
+        return null;
+    }
+
+    @Override
+    public boolean isOccupied(Vector2d position) {
+        if (animals.containsKey(position)) {
+            return true;
+        }
+
         for (Plant plant : plants) {
             if (position.equals(plant.getPosition())) {
                 return true;
@@ -137,10 +166,8 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
 
     @Override
     public Object objectAt(Vector2d position) {
-        for (Animal animal : animals) {
-            if (position.equals(animal.getPosition())) {
-                return animal;
-            }
+        if (animals.containsKey(position)) {
+            return animals.get(position).get(0);
         }
         for (Plant plant : plants) {
             if (position.equals(plant.getPosition())) {
@@ -148,6 +175,13 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
             }
         }
         return null;
+    }
+
+    private List<Animal> getAnimalsAt(Vector2d position) {
+        List<Animal> animalsList = animals.get(position);
+        Collections.sort(animalsList);
+        Collections.reverse(animalsList);
+        return animalsList;
     }
 
     @Override
@@ -158,31 +192,41 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
 
     public int getAutosomalDominant() {
         int[] geneCount = {0, 0, 0, 0, 0, 0, 0, 0};
-        for (Animal animal : animals) {
+        for (Animal animal : getAnimals()) {
             geneCount[animal.getActiveGene()]++;
         }
         Arrays.sort(geneCount);
         return geneCount[7];
     }
 
+    public int getTopGeneFromAllGenomes() {
+        int[] geneCount = {0, 0, 0, 0, 0, 0, 0, 0};
+        getAnimals().forEach(a -> a.getGenome().forEach(x -> geneCount[x]++));
+        int maxG = 0;
+        for (int i = 0; i < geneCount.length; ++i) {
+            if (geneCount[i] > geneCount[maxG]) {
+                maxG = i;
+            }
+        }
+        return maxG;
+    }
 
     public long getAverageEnergy() {
         double energy = 0.0;
-        for (Animal animal : animals) {
+        for (Animal animal : getAnimals()) {
             energy += animal.getEnergy();
         }
 
-        return Math.round(energy / animals.size());
+        return Math.round(energy / getAnimals().size());
     }
-
 
     public long getAverageLifespan() {
         double lifespan = 0.0;
-        for (Animal animal : animals) {
+        for (Animal animal : getAnimals()) {
             lifespan += animal.getEnergy();
         }
 
-        return Math.round(lifespan / animals.size());
+        return Math.round(lifespan / getAnimals().size());
 
     }
 
@@ -191,5 +235,45 @@ public class WorldMap implements IWorldMap, IAnimalObserver {
         return mapType.newLocation(this.size, location);
     }
 
+    @Override
+    public void cleanCorpses() {
 
+    }
+
+    @Override
+    public void moveAllAnimals() {
+        getAnimals().forEach(Animal::move);
+    }
+
+    @Override
+    public void consumePlants() {
+        for (var position : animals.keySet()) {
+            Plant plant = plantAt(position);
+            if (plant == null) {
+                continue;
+            }
+            getAnimalsAt(position).get(0).eat(plant);
+            removePlantAt(position);
+        }
+    }
+
+    @Override
+    public void reproduce(int energyThreshold, int energyInheritedFromParent) {
+        for (var currAnimals : animals.values()) {
+            if (currAnimals.size() >= 2) {
+                Collections.sort(currAnimals);
+                Collections.reverse(currAnimals);
+                Animal parent1 = currAnimals.get(0);
+                Animal parent2 = currAnimals.get(1);
+                if (parent2.getEnergy() >= energyThreshold) {
+                    addAnimal(new Animal(parent1, parent2, energyInheritedFromParent));
+                }
+            }
+        }
+    }
+
+    @Override
+    public void regrowPlants(int count) {
+
+    }
 }
