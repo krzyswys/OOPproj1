@@ -19,4 +19,5 @@ public abstract class AbstractMapElement {
     public int getEnergy() {
         return energy;
     }
+
 }
