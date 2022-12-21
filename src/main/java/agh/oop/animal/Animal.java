@@ -139,7 +139,7 @@ public class Animal extends AbstractMapElement implements Comparable<Animal> {
         return this.getPosition().add(MapDirection.fromNumber(genome.get(activeGene)).toUnitVector());
     }
 
-    private void addObserver(IAnimalObserver o) {
+    public void addObserver(IAnimalObserver o) {
         observerList.add(o);
     }
 

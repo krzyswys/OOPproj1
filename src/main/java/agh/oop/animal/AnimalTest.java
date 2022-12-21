@@ -1,10 +1,11 @@
 package agh.oop.animal;
 
-import org.junit.jupiter.api.Test;
+import org.testng.annotations.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+//import static org.junit.jupiter.api.Assertions.*;
+import static org.testng.AssertJUnit.assertTrue;
 
 class AnimalTest {
     @Test

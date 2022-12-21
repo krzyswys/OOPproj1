@@ -3,7 +3,7 @@ package agh.oop;
 import java.util.Objects;
 
 public class Vector2d {
-    private final int x, y;
+    public final int x, y; //change to private after gui fix
 
     public Vector2d(int x, int y) {
         this.x = x;
