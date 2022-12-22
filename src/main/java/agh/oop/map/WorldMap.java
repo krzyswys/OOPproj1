@@ -50,7 +50,7 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
     }
 
     public List<Plant> getPlants() {
-        System.out.println(plants.size());
+//        System.out.println(plants.size());
         return plants;
     }
 

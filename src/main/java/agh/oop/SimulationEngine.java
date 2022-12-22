@@ -54,7 +54,8 @@ public class SimulationEngine implements Runnable {
 
             while(go && map.getAnimals().size()>0) {
                 try {
-                    System.out.println(map.getPlants().size() + "rozmiar") ;
+
+//                    System.out.println(map.getAnimals().size() + " rozmiar") ;
                     map.cycle(energyNeededForReproduction, energyInheritedFromParent, startingAnimals);
                     Thread.sleep(500);
 

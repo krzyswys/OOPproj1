@@ -49,9 +49,9 @@ public class App extends Application implements IAnimalObserver {
     public void init() {
         try {
 
-            this.engine = new SimulationEngine(new MapSize(19, 19), new Earth(), new Toxic(), 15, 40);
-            plants = engine.getplants();
-            animals = engine.getanimals();
+            this.engine = new SimulationEngine(new MapSize(19, 19), new Earth(), new Toxic(), 35, 40);
+            this.plants = engine.getplants();
+            this.animals = engine.getanimals();
             this.engine.gate();
 
             for (Animal a : animals) {
@@ -62,8 +62,8 @@ public class App extends Application implements IAnimalObserver {
         }
     }
     private void generateMap() {
-        plants = engine.getplants();
-        animals = engine.getanimals();
+        this.plants = engine.getplants();
+        this.animals = engine.getanimals();
         addConstaints();
         populateWorld();
     }
@@ -98,19 +98,34 @@ public class App extends Application implements IAnimalObserver {
 
 
     public VBox setupConst() {
+        this.grid.setMaxHeight(0); grid.setMaxWidth(0);
+        TextField movesInput = new TextField();
+        movesInput.setPrefWidth(Math.floor(600));
+        movesInput.setText("");
+//        Button startButton = new Button("START");
+//        startButton.setOnAction(action -> {
+//            String[] args = movesInput.getText().split(" ");
+//            this.engine.applyMoves(OptionsParser.parse(args));
+//            Thread engineThread = new Thread(this.engine);
+//            engineThread.start();
+//        });
+
+
         this.grid.setGridLinesVisible(false);
         this.grid.setMaxHeight(0);
         grid.setMaxWidth(0);
         Button startButton = new Button("start/stop");
         startButton.setOnAction(action -> {
+            generateMap();
             Thread engineThread = new Thread(this.engine);
             engineThread.start();
             this.engine.gate();
         });
         HBox hBox = new HBox();
-        hBox.getChildren().addAll(startButton);
+        hBox.getChildren().addAll(movesInput,startButton);
         hBox.setAlignment(Pos.CENTER);
         hBox.setStyle("-fx-font-size: 20px");
+
         VBox vBox = new VBox();
         vBox.getChildren().addAll(this.grid, hBox);
         vBox.setAlignment(Pos.CENTER);
@@ -132,7 +147,6 @@ public class App extends Application implements IAnimalObserver {
     @Override
     public void start(Stage primaryStage) {
         VBox vBox = setupConst();
-        generateMap();
         Scene scene = new Scene(vBox, 720, 780);
         primaryStage.setScene(scene);
         primaryStage.setTitle("World");
@@ -156,7 +170,10 @@ public class App extends Application implements IAnimalObserver {
 //    File file = files[rand.nextInt(files.length)];
 //    System.out.println(file.getName());
 //    Image imgp = new Image("flower_textures/"+file.getName());
-        for (Plant iMapElement : plants) {
+        this.plants = engine.getplants();
+        this.animals = engine.getanimals();
+        System.out.println(this.animals.size());
+        for (Plant iMapElement : this.plants) {
             Label field = new Label("");
 //            ImageView view = new ImageView(imgp);
             ImageView view = new ImageView(iMapElement.getTexture());
@@ -166,7 +183,7 @@ public class App extends Application implements IAnimalObserver {
             this.grid.add(field, iMapElement.getPosition().x + 1, iMapElement.getPosition().y + 1, span, span);
             GridPane.setHalignment(field, javafx.geometry.HPos.CENTER);
         }
-        for (Animal d : animals) {
+        for (Animal d : this.animals) {
             Label field = new Label("");
             Image img = d.getTexture();
             ImageView view = new ImageView(img);
