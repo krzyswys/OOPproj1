@@ -9,12 +9,15 @@ import agh.oop.map.WorldMap;
 import agh.oop.plant.Plant;
 import agh.oop.plant.Trees;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
+import javafx.scene.image.Image;
+
 
 public class Animal extends AbstractMapElement implements Comparable<Animal> {
     private final List<Integer> genome = new ArrayList<>();
@@ -39,8 +42,10 @@ public class Animal extends AbstractMapElement implements Comparable<Animal> {
         this.mutationsMax = mutationsMax;
         this.nextGeneGenerator = nextGeneGenerator;
         this.geneMutator = geneMutator;
+//        texture = new Image("animal_textures/bee.png");
+        texture = new Image("waspyboi.gif");
 
-        for (int i = 0; i < genomeLength; ++i) {
+        for (int i = 0; i < genomeLength; i++) {
             genome.add(generateGene());
         }
     }
@@ -114,9 +119,11 @@ public class Animal extends AbstractMapElement implements Comparable<Animal> {
     public void addEnergy(int amount) {
         energy += amount;
     }
-
     public int getActiveGene() {
         return activeGene;
+    }
+    public void getNextGene(){ //could be used for more friendly animal rotation?
+//        return nextGene()?
     }
 
     public int getTimeAlive() {
@@ -126,6 +133,7 @@ public class Animal extends AbstractMapElement implements Comparable<Animal> {
     public int getPlantsEaten() {
         return plantsEaten;
     }
+
 
     public int getKids() {
         return kids;
@@ -139,7 +147,7 @@ public class Animal extends AbstractMapElement implements Comparable<Animal> {
         return this.getPosition().add(MapDirection.fromNumber(genome.get(activeGene)).toUnitVector());
     }
 
-    private void addObserver(IAnimalObserver o) {
+    public void addObserver(IAnimalObserver o) {
         observerList.add(o);
     }
 

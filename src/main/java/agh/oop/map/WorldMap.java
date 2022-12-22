@@ -9,6 +9,7 @@ import agh.oop.animal.INextGene;
 import agh.oop.plant.IPlantType;
 import agh.oop.plant.Plant;
 
+import java.io.Console;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -28,8 +29,8 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
         this.size = size;
         for (int i = 0; i < size.getWidth(); i++) {
             for (int j = 0; j < size.getHeight(); j++) {
-//                deadAnimalsPerPosition.put(new Vector2d(i,j), ThreadLocalRandom.current().nextInt(0, 20));
-                deadAnimalsPerPosition.put(new Vector2d(i, j), 0);
+                deadAnimalsPerPosition.put(new Vector2d(i,j), ThreadLocalRandom.current().nextInt(0, 20));
+//                deadAnimalsPerPosition.put(new Vector2d(i, j), 0);
             }
         }
     }
@@ -49,6 +50,7 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
     }
 
     public List<Plant> getPlants() {
+        System.out.println(plants.size());
         return plants;
     }
 
@@ -120,7 +122,7 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
             //TODO:when occupied plant on different position
             Vector2d positon = plantType.getFertileField(this);
             if (positon != null) {
-                Plant plant = new Plant(positon, energy, this.plantType);
+                Plant plant = new Plant(this,positon, energy, this.plantType);
                 plants.add(plant);
             }
         }
@@ -128,7 +130,7 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
     }
 
     private void createPlantAt(Vector2d position) {
-        Plant plant = new Plant(position, 5, this.plantType);
+        Plant plant = new Plant(this,position, 5, this.plantType);
         plants.add(plant);
     }
 
