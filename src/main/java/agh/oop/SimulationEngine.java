@@ -18,13 +18,13 @@ public class SimulationEngine implements Runnable {
     private final int energyNeededForReproduction = 30;
     private final int energyInheritedFromParent = 20;
 
+    //TODO: make it as a variable when setting up engine
     IGeneMutator geneMutator;
     INextGene nextGene;
     WorldMap map;
     public boolean go = false;
     MapVisualizer mapVisualizer;
 
-    //https://stackoverflow.com/questions/25873769/launch-javafx-application-from-another-class
     public SimulationEngine(MapSize mapSize, IMapType mapType, IPlantType plantType, int startingAnimals, int startingPlants) {
         this.mapSize = mapSize;
         this.mapType = mapType;
@@ -38,11 +38,11 @@ public class SimulationEngine implements Runnable {
 
     }
 
-    public List<Plant> getPlants() {
+    public List<Plant> getplants() {
         return map.getPlants();
     }
 
-    public List<Animal> getAnimals() {
+    public List<Animal> getanimals() {
         return map.getAnimals();
     }
 
@@ -51,26 +51,21 @@ public class SimulationEngine implements Runnable {
     }
 
     public void run() {
-        if (go) {
 
-            List<Animal> animals = map.getAnimals();
-
-            for (int i = 0; i < 10; i++) {
-                animals = map.getAnimals();
-                System.out.println(animals.get(0).stats());
-
+            while(go && map.getAnimals().size()>0) {
                 try {
+                    System.out.println(map.getPlants().size() + "rozmiar") ;
+                    map.cycle(energyNeededForReproduction, energyInheritedFromParent, startingAnimals);
                     Thread.sleep(500);
+
                 } catch (InterruptedException e) {
                     System.out.println(e);
                 }
-                map.cycle(energyNeededForReproduction, energyInheritedFromParent, startingAnimals);
-                System.out.println(map.getAnimals().size());
-                System.out.println(mapVisualizer.draw(
-                        new Vector2d(0, 0), new Vector2d(map.getSize().getHeight(), map.getSize().getWidth())));
+//                System.out.println(map.getAnimals().size());
+//                System.out.println(mapVisualizer.draw(
+//                        new Vector2d(0, 0), new Vector2d(map.getSize().getHeight(), map.getSize().getWidth())));
             }
         }
 
 
-    }
 }
