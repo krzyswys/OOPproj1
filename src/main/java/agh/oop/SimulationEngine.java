@@ -15,27 +15,37 @@ public class SimulationEngine implements Runnable {
     private IPlantType plantType;
     int startingAnimals;
     int startingPlants;
-    private final int energyNeededForReproduction = 30;
+    private final int energyNeededForReproduction;
     private final int energyInheritedFromParent = 20;
 
     //TODO: make it as a variable when setting up engine
     IGeneMutator geneMutator;
     INextGene nextGene;
-    WorldMap map;
+    public WorldMap map;
+    int i=0;
     public boolean go = false;
     MapVisualizer mapVisualizer;
+    private IMapRefreshObserver observer;
 
-    public SimulationEngine(MapSize mapSize, IMapType mapType, IPlantType plantType, int startingAnimals, int startingPlants) {
+    public SimulationEngine(MapSize mapSize,IGeneMutator gene,  INextGene next, IMapType mapType, IPlantType plantType, int startingAnimals, int startingPlants, int animalStartEnergy, int energyFromGrass, int energyToReproduce, int grasPerCycle, int energyLostPerCycle) {
         this.mapSize = mapSize;
         this.mapType = mapType;
+        this.geneMutator = gene;
+        this.nextGene = next;
         this.plantType = plantType;
         this.startingPlants = startingPlants;
         this.startingAnimals = startingAnimals;
+        this.energyNeededForReproduction = energyToReproduce;
         this.map = new WorldMap(mapSize, mapType, plantType);
         this.mapVisualizer = new MapVisualizer(map);
-        map.createNAnimals(startingAnimals, 100, 5, 2, 2, new NextGeneNormal(), new MutatorRandom());
-        map.createNPlants(startingPlants, 5);
+        map.createNAnimals(startingAnimals, animalStartEnergy, 5, 2, 2, nextGene, geneMutator);
+        map.createNPlants(startingPlants, energyFromGrass);
+        run();
 
+    }
+
+    public void addObserverMap(IMapRefreshObserver o) {
+        observer = o;
     }
 
     public List<Plant> getplants() {
@@ -50,23 +60,43 @@ public class SimulationEngine implements Runnable {
         go = !go;
     }
 
+//    public void start(){
+//
+//
+//    }
+//    public void stop(){
+//            Thread.sus
+//
+//    }
     public void run() {
+        System.out.println("lmoa");
+        System.out.println(go);
+        try {
+            Thread.sleep(500);
+            System.out.println("tun");
 
-            while(go && map.getAnimals().size()>0) {
-                try {
 
-//                    System.out.println(map.getAnimals().size() + " rozmiar") ;
-                    map.cycle(energyNeededForReproduction, energyInheritedFromParent, startingAnimals);
-                    Thread.sleep(500);
 
-                } catch (InterruptedException e) {
-                    System.out.println(e);
-                }
-//                System.out.println(map.getAnimals().size());
-//                System.out.println(mapVisualizer.draw(
-//                        new Vector2d(0, 0), new Vector2d(map.getSize().getHeight(), map.getSize().getWidth())));
+
+        } catch (InterruptedException e) {
+            System.out.println(e);
+        }
+        while (go && map.getAnimals().size() > 0) {
+            System.out.println(go);
+
+            try {
+                Thread.sleep(500);
+                //FIXME: add grass growth per cycle to cycle and energyLostPerCycle
+                System.out.println(i);
+                i++;
+                map.cycle(energyNeededForReproduction, energyInheritedFromParent, startingAnimals, observer);
+
+
+            } catch (InterruptedException e) {
+                System.out.println(e);
             }
         }
+    }
 
 
 }

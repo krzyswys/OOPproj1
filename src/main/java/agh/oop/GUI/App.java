@@ -2,22 +2,20 @@ package agh.oop.GUI;
 
 import agh.oop.MapDirection;
 import agh.oop.SimulationEngine;
-import agh.oop.animal.Animal;
-import agh.oop.animal.IAnimalObserver;
-import agh.oop.map.Earth;
-import agh.oop.map.MapSize;
+import agh.oop.animal.*;
+import agh.oop.map.*;
+import agh.oop.plant.IPlantType;
 import agh.oop.plant.Plant;
 import agh.oop.plant.Toxic;
 import agh.oop.plant.Trees;
+import com.sun.jdi.InterfaceType;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.geometry.HPos;
@@ -28,48 +26,59 @@ import javafx.scene.image.ImageView;
 
 import java.io.File;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
 
-public class App extends Application implements IAnimalObserver {
+public class App extends Application implements IMapRefreshObserver {
     private List<Animal> animals;
     private List<Plant> plants;
     public int span = 1;
     final GridPane grid = new GridPane();
+    final GridPane info = new GridPane();
+    GridPane startMenu = new GridPane();
     SimulationEngine engine;
-    private final int cellSize = 40;
-    private final int cols = 20 + 1;
-    private final int rows = 20 + 1;
-    private final int animalImgSize = cellSize - 10;
-    private final int imgSize = cellSize + 1; //replace this with cellsize if bcimage can be sized fully to fit sqare or when span removed
+    private int width;
+    private int height;
+    private int energyFromGrass;
+    private int energyToReproduce;
+    private int animalStartEnergy;
+    private int grasPerCycle;
+    private int energyLostPerCycle;
+    private int numberOfAnimalsOnStart;
+    private int cellSize = 40;
+    private int cols = 20 + 1;
+    private int rows = 20 + 1;
+    private int animalImgSize = cellSize - 10;
+    private int imgSize = cellSize + 1; //replace this with cellsize if bcimage can be sized fully to fit sqare or when span removed
+    private IPlantType plantType = new Trees();
+    private IGeneMutator mutatorType = new MutatorRandom();
+    private INextGene nextGeneType = new NextGeneNormal();
+    private IMapType mapType = new Hell();
 
     @Override
     public void init() {
         try {
 
-            this.engine = new SimulationEngine(new MapSize(19, 19), new Earth(), new Toxic(), 35, 40);
-            this.plants = engine.getplants();
-            this.animals = engine.getanimals();
-            this.engine.gate();
 
-            for (Animal a : animals) {
-                a.addObserver(this);
-            }
         } catch (IllegalArgumentException e) {
             System.out.println(e + " an unordinary exeption has been called upon this creation that should be dealt without further ado as it is urging matter to anihilate all exeptions ");
         }
     }
+
     private void generateMap() {
         this.plants = engine.getplants();
         this.animals = engine.getanimals();
         addConstaints();
+        updateInfo();
         populateWorld();
     }
 
     @Override
-    public void positionChanged(Animal animal) { // possibly can be replaced by refresh function: https://stackoverflow.com/questions/25873769/launch-javafx-application-from-another-class
+    public void refresh() { // possibly can be replaced by antoher call: https://stackoverflow.com/questions/25873769/launch-javafx-application-from-another-class
+        System.out.println("sheesh");
 
         Platform.runLater(() -> {
 
@@ -85,71 +94,276 @@ public class App extends Application implements IAnimalObserver {
             this.grid.getChildren().clear();
             this.grid.getChildren().add(0, node);
 
+            while (this.info.getRowConstraints().size() > 0) {
+                this.info.getRowConstraints().remove(0);
+            }
 
+            while (this.info.getColumnConstraints().size() > 0) {
+                this.info.getColumnConstraints().remove(0);
+            }
+
+            Node nodex = this.info.getChildren().get(0);
+            this.info.getChildren().clear();
+            this.info.getChildren().add(0, nodex);
             generateMap();
+
         });
     }
 
-    //FIXME: create new observer for map or move death into animal?
-    @Override
-    public void death(Animal animal) {
 
-    }
-
-
-    public VBox setupConst() {
-        this.grid.setMaxHeight(0); grid.setMaxWidth(0);
+    public GridPane setupStart(Stage primaryStage) {
         TextField movesInput = new TextField();
         movesInput.setPrefWidth(Math.floor(600));
         movesInput.setText("");
-//        Button startButton = new Button("START");
-//        startButton.setOnAction(action -> {
-//            String[] args = movesInput.getText().split(" ");
-//            this.engine.applyMoves(OptionsParser.parse(args));
-//            Thread engineThread = new Thread(this.engine);
-//            engineThread.start();
-//        });
+
+        Label mapWidthLabel = new Label("mapWidthLabel: ");
+        mapWidthLabel.setStyle("-fx-text-fill: white");
+        Label mapHeightLabel = new Label("mapHeightLabel: ");
+        Label energyFromGrassLabel = new Label("energyFromGrassLabel: ");
+        Label energyRequiredToReproduceLabel = new Label("energyRequiredToReproduceLabel: ");
+        Label animalStartEnergyLabel = new Label("animalStartEnergyLabel: ");
+        Label grassPerCycleLabel = new Label("grassPerCycleLabel: ");
+        Label energyLostPerCycleLabel = new Label("energyLostPerCycle: ");
+        Label numberOfAnimalsOnStartLabel = new Label("numberOfAnimalsOnStart: ");
+        Label worldTypeLabel = new Label("type of world: ");
+        Label nextGeneTypeLabel = new Label("type of nextGene: ");
+        Label geneMutatorTypeLabel = new Label("type of geneMutator: ");
+        Label plantTypeLabel = new Label("type of plants: ");
 
 
-        this.grid.setGridLinesVisible(false);
-        this.grid.setMaxHeight(0);
-        grid.setMaxWidth(0);
-        Button startButton = new Button("start/stop");
+        mapHeightLabel.setStyle("-fx-text-fill: white");
+        energyFromGrassLabel.setStyle("-fx-text-fill: white");
+        energyRequiredToReproduceLabel.setStyle("-fx-text-fill: white");
+        animalStartEnergyLabel.setStyle("-fx-text-fill: white");
+        grassPerCycleLabel.setStyle("-fx-text-fill: white");
+        energyLostPerCycleLabel.setStyle("-fx-text-fill: white");
+        numberOfAnimalsOnStartLabel.setStyle("-fx-text-fill: white");
+
+        worldTypeLabel.setStyle("-fx-text-fill: white");
+        nextGeneTypeLabel.setStyle("-fx-text-fill: white");
+        geneMutatorTypeLabel.setStyle("-fx-text-fill: white");
+        plantTypeLabel.setStyle("-fx-text-fill: white");
+
+
+        TextField mapWidthField = new TextField("20");
+        TextField mapHeightField = new TextField("20");
+        TextField energyFromGrassField = new TextField("5");
+        TextField energyRequiredToReproduceField = new TextField("30");
+        TextField animalStartEnergyField = new TextField("15");
+        TextField grassPerCycleField = new TextField("1");
+        TextField energyLostPerCycleField = new TextField("1");
+        TextField numberOfAnimalsOnStartField = new TextField("35");
+//
+        ComboBox worldTypeField = new ComboBox();
+        worldTypeField.getItems().addAll(
+                "hell",
+                "round"
+        );
+        ComboBox nextGeneTypeField = new ComboBox();
+        nextGeneTypeField.getItems().addAll(
+                "NextGeneNormal",
+
+                "nextGeneCreazy" //TODO: not implemented
+        );
+        ComboBox geneMutatorTypeField = new ComboBox();
+        geneMutatorTypeField.getItems().addAll(
+                "MutatorRandom",
+                "slightCorrection?" //TODO: where is 'lekka korekta'?
+        );
+        ComboBox plantTypeField = new ComboBox();
+        plantTypeField.getItems().addAll(
+                "Toxic",
+                "Trees"
+        );
+
+
+        worldTypeField.getSelectionModel().selectFirst();
+        nextGeneTypeField.getSelectionModel().selectFirst();
+        geneMutatorTypeField.getSelectionModel().selectFirst();
+        plantTypeField.getSelectionModel().selectFirst();
+
+        GridPane txt = new GridPane();
+        txt.add(mapWidthLabel, 0, 0, span, span);
+        txt.add(mapWidthField, 1, 0, span, span);
+
+        txt.add(mapHeightLabel, 0, 1, span, span);
+        txt.add(mapHeightField, 1, 1, span, span);
+
+        txt.add(energyFromGrassLabel, 0, 2, span, span);
+        txt.add(energyFromGrassField, 1, 2, span, span);
+
+        txt.add(energyRequiredToReproduceLabel, 0, 3, span, span);
+        txt.add(energyRequiredToReproduceField, 1, 3, span, span);
+
+        txt.add(animalStartEnergyLabel, 0, 4, span, span);
+        txt.add(animalStartEnergyField, 1, 4, span, span);
+
+        txt.add(grassPerCycleLabel, 0, 5, span, span);
+        txt.add(grassPerCycleField, 1, 5, span, span);
+
+        txt.add(energyLostPerCycleLabel, 0, 6, span, span);
+        txt.add(energyLostPerCycleField, 1, 6, span, span);
+
+        txt.add(numberOfAnimalsOnStartLabel, 0, 7, span, span);
+        txt.add(numberOfAnimalsOnStartField, 1, 7, span, span);
+
+        txt.add(worldTypeLabel, 0, 8, span, span);
+        txt.add(worldTypeField, 1, 8, span, span);
+        txt.add(nextGeneTypeLabel, 0, 9, span, span);
+        txt.add(nextGeneTypeField, 1, 9, span, span);
+        txt.add(geneMutatorTypeLabel, 0, 10, span, span);
+        txt.add(geneMutatorTypeField, 1, 10, span, span);
+        txt.add(plantTypeLabel, 0, 11, span, span);
+        txt.add(plantTypeField, 1, 11, span, span);
+        Button startButton = new Button("start");
+
+
         startButton.setOnAction(action -> {
+
+            this.width = Integer.parseInt(mapWidthField.getText());
+            this.height = Integer.parseInt(mapHeightField.getText());
+            this.rows = height + 2;
+            this.cols = width + 2;
+            //TODO: set cellsize proportion
+//            this.cellSize = (int) (width*0.1*height*0.1*10);
+            this.animalImgSize = (int) (cellSize * 0.8);
+            this.imgSize = cellSize + 1;
+            this.energyFromGrass = Integer.parseInt(energyFromGrassField.getText());
+            this.energyToReproduce = Integer.parseInt(energyRequiredToReproduceField.getText());
+            this.animalStartEnergy = Integer.parseInt(animalStartEnergyField.getText());
+            this.grasPerCycle = Integer.parseInt(grassPerCycleField.getText());
+            this.energyLostPerCycle = Integer.parseInt(energyLostPerCycleField.getText());
+            this.numberOfAnimalsOnStart = Integer.parseInt(numberOfAnimalsOnStartField.getText());
+            Object value = plantTypeField.getValue();
+            if ("Toxic".equals(value)) {
+                this.plantType = new Toxic();
+            } else if ("Trees".equals(value)) {
+                this.plantType = new Trees();
+            }
+            Object mp = worldTypeField.getValue();
+            if ("hell".equals(mp)) {
+                this.mapType = new Hell();
+            } else if ("round".equals(mp)) {
+                this.mapType = new Earth();
+            }
+            Object gm = geneMutatorTypeField.getValue();
+            if ("MutatorRandom".equals(gm)) {
+                this.mutatorType = new MutatorRandom();
+            } else if ("slightCorrection".equals(gm)) {
+                this.mutatorType = new MutatorRandom(); //TODO: cahnge when inplemented
+            }
+            Object ng = geneMutatorTypeField.getValue();
+            if ("nextGeneCreazy".equals(ng)) {
+                this.nextGeneType = new NextGeneNormal(); //TODO: change when inplemented
+            } else if ("NextGeneNormal".equals(ng)) {
+                this.nextGeneType = new NextGeneNormal();
+            }
+
+
+            startMenu.setVisible(false);
+            this.engine = new SimulationEngine(new MapSize(this.width, this.height), this.mutatorType, this.nextGeneType, this.mapType, this.plantType, this.numberOfAnimalsOnStart, 40, this.animalStartEnergy, this.energyFromGrass, this.energyToReproduce, this.grasPerCycle, this.energyLostPerCycle);
+            this.plants = engine.getplants();
+            this.animals = engine.getanimals();
+            this.engine.addObserverMap(this);
+
+            this.engine.run();
+            updateInfo();
             generateMap();
             Thread engineThread = new Thread(this.engine);
             engineThread.start();
+
+            Button btn = new Button("stop");
+            //FIXME: merge it into one btn and replace --
+            btn.setOnAction(ac -> {
+                engineThread.suspend();
+            });
+            Button btn2 = new Button("start");
+            btn2.setOnAction(ac -> {
+                engineThread.resume();
+            });
+            HBox hBox = new HBox();
+            hBox.getChildren().addAll(this.info,btn, btn2);
+            hBox.setAlignment(Pos.CENTER);
+
+
+            HBox vBox = new HBox();
+            GridPane tmp1 = new GridPane();
+
+            tmp1.add(this.grid, 0,0,span,span);
+            tmp1.add(hBox, 0,1, span,span);
+
+
+            vBox.getChildren().addAll(tmp1);
+            vBox.setAlignment(Pos.CENTER);
+            vBox.setStyle("-fx-background-color: #56565e;");
+            GridPane tmp2 = new GridPane();
+
+            tmp2.add(this.info, 0,0,span,span);
+            tmp2.add(vBox, 1,0, span,span);
+
+
+            VBox vBoxx = new VBox();
+
+            vBoxx.getChildren().addAll(tmp2);
+            vBoxx.setAlignment(Pos.CENTER);
+            vBoxx.setStyle("-fx-background-color: #56565e;");
+
+            Scene scene = new Scene(vBoxx, (this.cols * cellSize + 2 * cellSize)*2, this.rows * cellSize + 2 * cellSize);
+            primaryStage.setScene(scene);
             this.engine.gate();
         });
         HBox hBox = new HBox();
-        hBox.getChildren().addAll(movesInput,startButton);
+        hBox.getChildren().addAll(startButton);
         hBox.setAlignment(Pos.CENTER);
-        hBox.setStyle("-fx-font-size: 20px");
 
-        VBox vBox = new VBox();
-        vBox.getChildren().addAll(this.grid, hBox);
-        vBox.setAlignment(Pos.CENTER);
-        vBox.setStyle("-fx-background-color: #56565e;");
-        VBox.setMargin(hBox, new Insets(10, 0, 50, 0));
+        startMenu.add(txt, 1, 0, span, span);
+        startMenu.add(hBox, 1, 1, span, span);
 
-        var image = new Image("background_textures/grass.jpg", true);
+        var images = new Image("border_textures/wbricks.jpg", true);
+        var bgImages = new BackgroundImage(
+                images,
+                BackgroundRepeat.REPEAT,
+                BackgroundRepeat.REPEAT,
+                BackgroundPosition.DEFAULT,
+                new BackgroundSize(30, 30, false, false, false, false)
+
+        );
+        var image = new Image("background_textures/grass.jpg", true); //FIXME: fix map background when it is not a square
         var bgImage = new BackgroundImage(
                 image,
-                BackgroundRepeat.NO_REPEAT,
-                BackgroundRepeat.NO_REPEAT,
+                BackgroundRepeat.REPEAT,
+                BackgroundRepeat.REPEAT,
                 BackgroundPosition.DEFAULT,
-                new BackgroundSize(1.0, 1.0, true, true, false, false)
+                new BackgroundSize((int)(this.cols * cellSize/2336), (int)(this.rows * cellSize/2334), false, false, true, false)
         );
         this.grid.setBackground(new Background(bgImage));
-        return vBox;
+        this.grid.setGridLinesVisible(false);
+        this.grid.setMaxHeight(0);
+        this.grid.setMaxWidth(0);
+        startMenu.setBackground(new Background(bgImages));
+        return startMenu;
+
     }
 
     @Override
     public void start(Stage primaryStage) {
-        VBox vBox = setupConst();
+        HBox hBox = new HBox();
+        GridPane txt = setupStart(primaryStage);
+        hBox.getChildren().addAll(txt);
+        hBox.setAlignment(Pos.CENTER);
+        hBox.setStyle("-fx-font-size: 20px");
+        VBox vBox = new VBox();
+        vBox.getChildren().addAll(hBox);
+        vBox.setAlignment(Pos.CENTER);
+        vBox.setStyle("-fx-background-color: #56565e;");
+
+        VBox.setMargin(hBox, new Insets(10, 0, 50, 0));
         Scene scene = new Scene(vBox, 720, 780);
         primaryStage.setScene(scene);
         primaryStage.setTitle("World");
+
+
+
         primaryStage.show();
     }
 
@@ -162,6 +376,57 @@ public class App extends Application implements IAnimalObserver {
         }
     }
 
+    public void updateInfo() {
+//        for (int i = 0; i < rows - 1; i++) {
+//            this.info.getColumnConstraints().add(new ColumnConstraints(200));
+//        }
+//        for (int i = 0; i < cols - 1; i++) {
+//            this.info.getRowConstraints().add(new RowConstraints(200));
+//        }
+
+        Label allAnimals = new Label("Aktualna ilosc zwierzat: "+this.engine.map.getAnimals().size() + "");
+        allAnimals.setStyle("-fx-text-fill: white");
+        this.info.add(allAnimals, 2,0,span,span);
+
+        Label allPlants = new Label("Aktualna ilosc roslin: "+this.engine.map.getPlants().size() + "");
+        allPlants.setStyle("-fx-text-fill: white");
+        this.info.add(allPlants, 2,1,span,span);
+
+        Label allFreeSpace = new Label("Aktualna ilosc wolnych miejsc: "+this.engine.map.getFreeSpace() + "");
+        allFreeSpace.setStyle("-fx-text-fill: white");
+        this.info.add(allFreeSpace, 2,2,span,span);
+
+        Label gene = new Label("Aktualna najpopularniejszy gen: "+this.engine.map.getTopGeneFromAllGenomes() + "");
+        gene.setStyle("-fx-text-fill: white");
+        this.info.add(gene, 2,3,span,span);
+
+        Label avg = new Label("Aktualna srednia energi dla zyjacych zwierzat: "+this.engine.map.getAverageEnergy() + "");
+        avg.setStyle("-fx-text-fill: white");
+        this.info.add(avg, 2,4,span,span);
+
+        Label avgLife = new Label("Aktualna snrednia dlugosc zycia martwych zwierzat: "+this.engine.map.getAverageLifespan() + "");
+        avgLife.setStyle("-fx-text-fill: white");
+        this.info.add(avgLife, 2,5,span,span);
+
+        Label days = new Label("Aktualna liczba dni: "+this.engine.map.getDays() + "");
+        this.info.add(days, 2,6,span,span);
+        days.setStyle("-fx-text-fill: white");
+
+        var images = new Image("border_textures/wblocks.jpg", true);
+        var bgImages = new BackgroundImage(
+                images,
+                BackgroundRepeat.REPEAT,
+                BackgroundRepeat.REPEAT,
+                BackgroundPosition.DEFAULT,
+                new BackgroundSize(30, 30, false, false, false, false)
+
+        );
+
+        info.setStyle("-fx-font-size: 20px");
+        info.setBackground(new Background(bgImages));
+
+    }
+
     public void populateWorld() {
         // for finding one uneatable plant:
 //    File dir = new File("src/main/resources/flower_textures");
@@ -172,7 +437,6 @@ public class App extends Application implements IAnimalObserver {
 //    Image imgp = new Image("flower_textures/"+file.getName());
         this.plants = engine.getplants();
         this.animals = engine.getanimals();
-        System.out.println(this.animals.size());
         for (Plant iMapElement : this.plants) {
             Label field = new Label("");
 //            ImageView view = new ImageView(imgp);

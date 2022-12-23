@@ -7,15 +7,16 @@ public interface IDayCycle {
 
     void consumePlants();
 
-    public void reproduce(int energyThreshold, int energyInheritedFromParent);
+    void reproduce(int energyThreshold, int energyInheritedFromParent);
 
     void regrowPlants(int number);
 
-    default void cycle(int energyThreshold, int energyInheritedFromParent, int numberOfPlants) {
+    default void cycle(int energyThreshold, int energyInheritedFromParent, int numberOfPlants, IMapRefreshObserver o) {
         cleanCorpses();
         moveAllAnimals();
         consumePlants();
         reproduce(energyThreshold, energyInheritedFromParent);
         regrowPlants(numberOfPlants);
+        o.refresh();
     }
 }
