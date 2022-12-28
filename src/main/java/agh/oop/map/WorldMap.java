@@ -8,16 +8,16 @@ import agh.oop.animal.IGeneMutator;
 import agh.oop.animal.INextGene;
 import agh.oop.plant.IPlantType;
 import agh.oop.plant.Plant;
-
 import java.io.Console;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
+public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle, IMapRefreshObserver {
     private final Map<Vector2d, List<Animal>> animals = new HashMap<>();
     private final MapVisualizer visualizer = new MapVisualizer(this);
     private final List<Plant> plants = new ArrayList<>();
     private final List<Animal> deadAnimals = new ArrayList<>();
+    private int days =0;
     IPlantType plantType;
     IMapType mapType;
     MapSize size;
@@ -50,10 +50,12 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
     }
 
     public List<Plant> getPlants() {
-        System.out.println(plants.size());
+//        System.out.println(plants.size());
         return plants;
     }
-
+public int getDays(){
+        return days;
+}
     public HashMap<Vector2d, Integer> getdeadAnimalsPerPosition() {
         return deadAnimalsPerPosition;
     }
@@ -74,6 +76,7 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
     @Override
     public void death(Animal animal) {
         deadAnimals.add(animal);
+
         Integer num = deadAnimalsPerPosition.getOrDefault(animal.getPosition(), 0);
         deadAnimalsPerPosition.put(animal.getPosition(), num + 1);
         removeAnimal(animal);
@@ -193,14 +196,7 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
     }
 
 
-    public int getAutosomalDominant() {
-        int[] geneCount = {0, 0, 0, 0, 0, 0, 0, 0};
-        for (Animal animal : getAnimals()) {
-            geneCount[animal.getActiveGene()]++;
-        }
-        Arrays.sort(geneCount);
-        return geneCount[7];
-    }
+
 
     public int getTopGeneFromAllGenomes() {
         Integer[] geneCount = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -223,14 +219,28 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
 
         return Math.round(energy / getAnimals().size());
     }
+    public int getFreeSpace(){
+        HashMap<Vector2d, Integer> occupied = new HashMap<Vector2d, Integer>();
 
-    public long getAverageLifespan() {
-        double lifespan = 0.0;
-        for (Animal animal : getAnimals()) {
-            lifespan += animal.getEnergy();
+
+        for (Plant plant : plants) {
+            occupied.put(plant.getPosition(), 0);
         }
+        for (Map.Entry<Vector2d, List<Animal>> entry : animals.entrySet()) {
+            occupied.put(entry.getKey(), 0);
+        }
+        return  size.getWidth()*size.getHeight() - occupied.size() ;
 
-        return Math.round(lifespan / getAnimals().size());
+    }
+
+    public double getAverageLifespan() {
+        double lifespan = 0.0;
+        for (Animal animal : getDeadAnimals()) {
+            lifespan += animal.getTimeAlive();
+            System.out.println(animal.getTimeAlive());
+        }
+            System.out.println(lifespan + " " + getDeadAnimals().size());
+        return Math.round(lifespan / getDeadAnimals().size());
 
     }
 
@@ -247,6 +257,7 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
     @Override
     public void moveAllAnimals() {
         getAnimals().forEach(Animal::move);
+        days+=1;
     }
 
     @Override
@@ -280,4 +291,7 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle {
     public void regrowPlants(int count) {
 
     }
+
+
+
 }
