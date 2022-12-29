@@ -6,6 +6,6 @@ import agh.oop.map.WorldMap;
 import java.util.List;
 
 public interface IPlantType {
-    public List<Vector2d> calculateFertileArea(WorldMap map);
-    public Vector2d getFertileField(WorldMap map);
+    public void calculateFertileArea(WorldMap map);
+    public int getFertileField(Vector2d pos);
 }
