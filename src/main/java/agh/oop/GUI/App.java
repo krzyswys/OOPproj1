@@ -104,7 +104,7 @@ public class App extends Application implements IMapRefreshObserver {
 
             Node nodex = this.info.getChildren().get(0);
             this.info.getChildren().clear();
-            this.info.getChildren().add(0, nodex);
+//            this.info.getChildren().add(0, nodex);
             generateMap();
 
         });

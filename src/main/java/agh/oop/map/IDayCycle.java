@@ -16,6 +16,7 @@ public interface IDayCycle {
         moveAllAnimals();
         consumePlants();
         reproduce(energyThreshold, energyInheritedFromParent);
+        //TODO:
         regrowPlants(20);
         o.refresh();
     }

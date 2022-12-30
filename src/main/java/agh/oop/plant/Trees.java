@@ -37,6 +37,6 @@ public class Trees implements IPlantType {
 
     @Override
     public int getFertileField(Vector2d pos) {
-        return positionsByDistance.contains(pos) ? 60 : 10;
+        return positionsByDistance.contains(pos) ? 40 : 3;
     }
 }
