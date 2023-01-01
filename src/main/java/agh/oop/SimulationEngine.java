@@ -13,14 +13,15 @@ public class SimulationEngine implements Runnable {
     private MapSize mapSize;
     private IMapType mapType;
     private IPlantType plantType;
-    int startingAnimals;
-    int startingPlants;
+    private int startingAnimals;
+    private int energyLostPerCycle;
+    private final int energyFromGrass;
     private final int energyNeededForReproduction;
     private final int energyInheritedFromParent = 20;
 
     //TODO: make it as a variable when setting up engine
-    IGeneMutator geneMutator;
-    INextGene nextGene;
+    private IGeneMutator geneMutator;
+    private INextGene nextGene;
     public WorldMap map;
     int i=0;
     public boolean go = false;
@@ -33,13 +34,14 @@ public class SimulationEngine implements Runnable {
         this.geneMutator = gene;
         this.nextGene = next;
         this.plantType = plantType;
-        this.startingPlants = startingPlants;
         this.startingAnimals = startingAnimals;
         this.energyNeededForReproduction = energyToReproduce;
+        this.energyLostPerCycle = energyLostPerCycle;
         this.map = new WorldMap(mapSize, mapType, plantType);
         this.mapVisualizer = new MapVisualizer(map);
+        this.energyFromGrass = energyFromGrass;
         map.createNAnimals(startingAnimals, animalStartEnergy, 5, 2, 2, nextGene, geneMutator);
-        map.createNPlants(startingPlants, energyFromGrass);
+        map.createNPlants(startingPlants,energyFromGrass);
         run();
 
     }
@@ -89,9 +91,7 @@ public class SimulationEngine implements Runnable {
                 //FIXME: add grass growth per cycle to cycle and energyLostPerCycle
                 System.out.println(i);
                 i++;
-                map.cycle(energyNeededForReproduction, energyInheritedFromParent, startingAnimals, observer);
-
-
+                map.cycle(energyNeededForReproduction, energyInheritedFromParent,10, energyFromGrass, energyLostPerCycle, observer);
             } catch (InterruptedException e) {
                 System.out.println(e);
             }

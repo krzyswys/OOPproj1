@@ -3,21 +3,20 @@ package agh.oop.map;
 public interface IDayCycle {
     void cleanCorpses();
 
-    void moveAllAnimals();
+    void moveAllAnimals( int moveCost );
 
     void consumePlants();
 
     void reproduce(int energyThreshold, int energyInheritedFromParent);
 
-    void regrowPlants(int number);
+    void regrowPlants(int amount, int number);
 
-    default void cycle(int energyThreshold, int energyInheritedFromParent, int numberOfPlants, IMapRefreshObserver o) {
+    default void cycle(int energyThreshold, int energyInheritedFromParent, int numberOfPlants, int energyPerPlant, int energyLostPerCycle, IMapRefreshObserver o) {
         cleanCorpses();
-        moveAllAnimals();
+        moveAllAnimals(energyLostPerCycle);
         consumePlants();
         reproduce(energyThreshold, energyInheritedFromParent);
-        //TODO:
-        regrowPlants(20);
+        regrowPlants(numberOfPlants, energyPerPlant);
         o.refresh();
     }
 }

@@ -98,13 +98,12 @@ public class Animal extends AbstractMapElement implements Comparable<Animal> {
         parent2.kids++;
     }
 
-    public void move() throws InterruptedException {
+    public void move( int cost ) {
         this.prevPosition = position;
         timeAlive += 1;
-//        wait();
         var newLocation = map.newLocation(this.nextPosition());
         this.setPosition(newLocation.newPosition);
-        this.removeEnergy(3 + newLocation.energyCost);
+        this.removeEnergy(cost + newLocation.energyCost);
         activeGene = nextGeneGenerator.NextGene(activeGene, genome.size());
         notifyObservers(ActionType.POSITION_CHANGED);
     }

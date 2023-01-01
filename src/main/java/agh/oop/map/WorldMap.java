@@ -46,7 +46,7 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle, IMapRefr
         return deadAnimals;
     }
 
-    public synchronized List<Animal> getAnimals() {
+    public List<Animal> getAnimals() {
         List<Animal> animalList = new ArrayList<>();
 //        animals.values().forEach(animalList::addAll);
         for( var I : animals.values() ) {
@@ -75,28 +75,25 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle, IMapRefr
     }
 
     @Override
-    public synchronized void positionChanged(Animal animal) {
-        synchronized (animals) {
+    public void positionChanged(Animal animal) {
             Vector2d oldLocation = animal.prevPosition;
             Vector2d newLocation = animal.getPosition();
             removeAnimal(oldLocation, animal);
             addAnimal(newLocation, animal);
-//            notify();
-        }
     }
 
     @Override
     public void death(Animal animal) {
         corpses.add(animal);
     }
-    private synchronized void cleanCorpse(Animal animal) {
+    private void cleanCorpse(Animal animal) {
         deadAnimals.add(animal);
         Integer num = deadAnimalsPerPosition.getOrDefault(animal.getPosition(), 0);
         deadAnimalsPerPosition.put(animal.getPosition(), num + 1);
         removeAnimal(animal.getPosition(), animal);
     }
 
-    private synchronized void removeAnimal(Vector2d position, Animal animal) {
+    private void removeAnimal(Vector2d position, Animal animal) {
         if (animals.containsKey(position)) {
             if (animals.get(position).size() <= 1) {
                 animals.remove(position);
@@ -106,20 +103,18 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle, IMapRefr
         }
     }
 
-    private synchronized void addAnimal(Animal animal) {
-        synchronized (animals) {
+    private void addAnimal(Animal animal) {
             animals.computeIfAbsent(animal.getPosition(), k -> new ArrayList<>()).add(animal);
-        }
     }
 
-     private synchronized void addAnimal(Vector2d position, Animal animal) {
-         synchronized (animals) {
+     private void addAnimal(Vector2d position, Animal animal) {
+
              animals.computeIfAbsent(position, k -> new ArrayList<>()).add(animal);
-         }
+
     }
 
 
-    public synchronized void createNAnimals(int amount, int energy, int genomeLength, int mutationsMin, int mutationsMax, INextGene nextGeneGenerator, IGeneMutator geneMutator) {
+    public void createNAnimals(int amount, int energy, int genomeLength, int mutationsMin, int mutationsMax, INextGene nextGeneGenerator, IGeneMutator geneMutator) {
         for (int i = 0; i < amount; i++) {
             Vector2d position = generateRandomPosition();
             while (!(objectAt(position) instanceof Animal)) {
@@ -136,10 +131,27 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle, IMapRefr
     }
 
     public void createNPlants(int amount, int energy) {
+        var randomList = new ArrayList<Vector2d>();
         for (int x = 0; x < this.getSize().getWidth(); ++x) {
             for (int y = 0; y < this.getSize().getHeight(); ++y) {
-                if (ThreadLocalRandom.current().nextInt(0, 101) <= plantType.getFertileField(new Vector2d(x,y)) ) {
-                    createPlantAt(new Vector2d(x,y),energy);
+                randomList.add(new Vector2d(x,y));
+            }
+        }
+        Collections.shuffle(randomList);
+        for( var pos : randomList ) {
+            if ( plantAt(pos) == null &&
+                    ThreadLocalRandom.current().nextInt(0, 101) <= plantType.getFertileField(pos) ) {
+                createPlantAt(pos,energy);
+                if( --amount < 0 ) {
+                    break;
+                }
+            }
+        }
+        for( var pos : randomList ) {
+            if ( plantAt(pos) == null ) {
+                createPlantAt(pos,energy);
+                if( --amount < 0 ) {
+                    break;
                 }
             }
         }
@@ -185,12 +197,11 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle, IMapRefr
     }
 
     private List<Animal> getAnimalsAt(Vector2d position) {
-        synchronized (animals) {
+
             List<Animal> animalsList = animals.get(position);
             Collections.sort(animalsList);
             Collections.reverse(animalsList);
             return animalsList;
-        }
     }
 
     @Override
@@ -241,7 +252,7 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle, IMapRefr
             System.out.println(animal.getTimeAlive());
         }
         System.out.println(lifespan + " " + getDeadAnimals().size());
-        return Math.round(lifespan / getDeadAnimals().size());
+        return Math.round(lifespan / getDeadAnimals().size() * 10) / 10.0;
 
     }
 
@@ -251,7 +262,7 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle, IMapRefr
     }
 
     @Override
-    public synchronized void cleanCorpses() {
+    public void cleanCorpses() {
         for ( Animal corpse : corpses ) {
             cleanCorpse(corpse);
         }
@@ -259,23 +270,13 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle, IMapRefr
     }
 
     @Override
-    public synchronized void moveAllAnimals() {
-        synchronized (animals) {
-            try {
-                var a = getAnimals();
-                for ( var animal : a ) {
-                    animal.move();
-                }
-            }
-            catch (InterruptedException e) {
-                System.out.println(Arrays.toString(e.getStackTrace()));
-            }
-        }
+    public void moveAllAnimals(int moveCost) {
+        getAnimals().forEach( a -> a.move(moveCost));
         days += 1;
     }
 
     @Override
-    public synchronized void consumePlants() {
+    public void consumePlants() {
         for (var position : animals.keySet()) {
             Plant plant = plantAt(position);
             if (plant == null) {
@@ -287,7 +288,7 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle, IMapRefr
     }
 
     @Override
-    public synchronized void reproduce(int energyThreshold, int energyInheritedFromParent) {
+    public void reproduce(int energyThreshold, int energyInheritedFromParent) {
         for (var currAnimals : animals.values()) {
             if (currAnimals.size() >= 2) {
                 Collections.sort(currAnimals);
@@ -302,8 +303,8 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle, IMapRefr
     }
 
     @Override
-    public synchronized void regrowPlants(int energy) {
-        createNPlants(0,energy);
+    public void regrowPlants(int amount, int energy) {
+        createNPlants(amount, energy);
     }
 
 
