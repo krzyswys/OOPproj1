@@ -8,16 +8,19 @@ import agh.oop.animal.IGeneMutator;
 import agh.oop.animal.INextGene;
 import agh.oop.plant.IPlantType;
 import agh.oop.plant.Plant;
+
 import java.io.Console;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle, IMapRefreshObserver {
-    private final Map<Vector2d, List<Animal>> animals = new HashMap<>();
+    private final Map<Vector2d, List<Animal>> animals = new ConcurrentHashMap<>();
+    private final List<Animal> corpses = new ArrayList<>();
     private final MapVisualizer visualizer = new MapVisualizer(this);
-    private final List<Plant> plants = new ArrayList<>();
+    private final Map<Vector2d, Plant> plants = new HashMap<>();
     private final List<Animal> deadAnimals = new ArrayList<>();
-    private int days =0;
+    private int days = 0;
     IPlantType plantType;
     IMapType mapType;
     MapSize size;
@@ -27,10 +30,10 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle, IMapRefr
         this.plantType = plantType;
         this.mapType = mapType;
         this.size = size;
+        plantType.calculateFertileArea(this);
         for (int i = 0; i < size.getWidth(); i++) {
             for (int j = 0; j < size.getHeight(); j++) {
-                deadAnimalsPerPosition.put(new Vector2d(i,j), ThreadLocalRandom.current().nextInt(0, 20));
-//                deadAnimalsPerPosition.put(new Vector2d(i, j), 0);
+                deadAnimalsPerPosition.put(new Vector2d(i, j), ThreadLocalRandom.current().nextInt(0, 20));
             }
         }
     }
@@ -45,17 +48,23 @@ public class WorldMap implements IWorldMap, IAnimalObserver, IDayCycle, IMapRefr
 
     public List<Animal> getAnimals() {
         List<Animal> animalList = new ArrayList<>();
-        animals.values().forEach(animalList::addAll);
+//        animals.values().forEach(animalList::addAll);
+        for( var I : animals.values() ) {
+            animalList.addAll(I);
+        }
+        System.out.println(animalList);
         return animalList;
     }
 
     public List<Plant> getPlants() {
 //        System.out.println(plants.size());
-        return plants;
+        return new ArrayList<>(plants.values());
     }
-public int getDays(){
+
+    public int getDays() {
         return days;
-}
+    }
+
     public HashMap<Vector2d, Integer> getdeadAnimalsPerPosition() {
         return deadAnimalsPerPosition;
     }
@@ -67,23 +76,24 @@ public int getDays(){
 
     @Override
     public void positionChanged(Animal animal) {
-        Vector2d oldLocation = animal.getPosition();
-        Vector2d newLocation = this.newLocation(animal.nextPosition()).newPosition;
-        removeAnimal(animal);
-        addAnimal(newLocation, animal);
+            Vector2d oldLocation = animal.prevPosition;
+            Vector2d newLocation = animal.getPosition();
+            removeAnimal(oldLocation, animal);
+            addAnimal(newLocation, animal);
     }
 
     @Override
     public void death(Animal animal) {
+        corpses.add(animal);
+    }
+    private void cleanCorpse(Animal animal) {
         deadAnimals.add(animal);
-
         Integer num = deadAnimalsPerPosition.getOrDefault(animal.getPosition(), 0);
         deadAnimalsPerPosition.put(animal.getPosition(), num + 1);
-        removeAnimal(animal);
+        removeAnimal(animal.getPosition(), animal);
     }
 
-    private void removeAnimal(Animal animal) {
-        Vector2d position = animal.getPosition();
+    private void removeAnimal(Vector2d position, Animal animal) {
         if (animals.containsKey(position)) {
             if (animals.get(position).size() <= 1) {
                 animals.remove(position);
@@ -94,11 +104,13 @@ public int getDays(){
     }
 
     private void addAnimal(Animal animal) {
-        animals.computeIfAbsent(animal.getPosition(), k -> new ArrayList<>()).add(animal);
+            animals.computeIfAbsent(animal.getPosition(), k -> new ArrayList<>()).add(animal);
     }
 
-    private void addAnimal(Vector2d position, Animal animal) {
-        animals.computeIfAbsent(position, k -> new ArrayList<>()).add(animal);
+     private void addAnimal(Vector2d position, Animal animal) {
+
+             animals.computeIfAbsent(position, k -> new ArrayList<>()).add(animal);
+
     }
 
 
@@ -119,40 +131,44 @@ public int getDays(){
     }
 
     public void createNPlants(int amount, int energy) {
-        for (int i = 0; i < amount; i++) {
-            //TODO:make this plant 80% on fertile 20% non fertile
-            //TODO:when no fertile is available plant on non fertile
-            //TODO:when occupied plant on different position
-            Vector2d positon = plantType.getFertileField(this);
-            if (positon != null) {
-                Plant plant = new Plant(this,positon, energy, this.plantType);
-                plants.add(plant);
+        var randomList = new ArrayList<Vector2d>();
+        for (int x = 0; x < this.getSize().getWidth(); ++x) {
+            for (int y = 0; y < this.getSize().getHeight(); ++y) {
+                randomList.add(new Vector2d(x,y));
+            }
+        }
+        Collections.shuffle(randomList);
+        for( var pos : randomList ) {
+            if ( plantAt(pos) == null &&
+                    ThreadLocalRandom.current().nextInt(0, 101) <= plantType.getFertileField(pos) ) {
+                createPlantAt(pos,energy);
+                if( --amount < 0 ) {
+                    break;
+                }
+            }
+        }
+        for( var pos : randomList ) {
+            if ( plantAt(pos) == null ) {
+                createPlantAt(pos,energy);
+                if( --amount < 0 ) {
+                    break;
+                }
             }
         }
 
     }
 
-    private void createPlantAt(Vector2d position) {
-        Plant plant = new Plant(this,position, 5, this.plantType);
-        plants.add(plant);
+    private void createPlantAt(Vector2d position, int energy) {
+        Plant plant = new Plant(this, position, energy, this.plantType);
+        plants.put(position,plant);
     }
 
     private void removePlantAt(Vector2d position) {
-        for (Plant plant : plants) {
-            if (plant.getPosition().equals(position)) {
-                plants.remove(plant);
-                break;
-            }
-        }
+        plants.remove(position);
     }
 
     private Plant plantAt(Vector2d position) {
-        for (Plant plant : plants) {
-            if (position.equals(plant.getPosition())) {
-                return plant;
-            }
-        }
-        return null;
+        return plants.get(position);
     }
 
     @Override
@@ -161,20 +177,17 @@ public int getDays(){
             return true;
         }
 
-        for (Plant plant : plants) {
-            if (position.equals(plant.getPosition())) {
-                return true;
-            }
+        if (plants.containsKey(position)) {
+            return true;
         }
+
         return false;
     }
 
     @Override
     public Object objectAt(Vector2d position) { // if somwhere else is necessary to have animals checked first then new method should be mabe
-        for (Plant plant : plants) {
-            if (position.equals(plant.getPosition())) {
-                return  plant;
-            }
+        if (plants.containsKey(position)) {
+            return plants.get(position);
         }
         if (animals.containsKey(position)) {
             return animals.get(position).get(0);
@@ -184,18 +197,17 @@ public int getDays(){
     }
 
     private List<Animal> getAnimalsAt(Vector2d position) {
-        List<Animal> animalsList = animals.get(position);
-        Collections.sort(animalsList);
-        Collections.reverse(animalsList);
-        return animalsList;
+
+            List<Animal> animalsList = animals.get(position);
+            Collections.sort(animalsList);
+            Collections.reverse(animalsList);
+            return animalsList;
     }
 
     @Override
     public MapSize getSize() {
         return size;
     }
-
-
 
 
     public int getTopGeneFromAllGenomes() {
@@ -207,29 +219,29 @@ public int getDays(){
                 maxG = i;
             }
         }
-        Integer max =Arrays.stream(geneCount) .max(Integer::compare).get();
+        Integer max = Arrays.stream(geneCount).max(Integer::compare).get();
         return Arrays.asList(geneCount).indexOf(max);
     }
 
     public long getAverageEnergy() {
         double energy = 0.0;
-        for (Animal animal : getAnimals()) {
+        var animals = getAnimals();
+        for (Animal animal : animals) {
             energy += animal.getEnergy();
         }
-
-        return Math.round(energy / getAnimals().size());
+        return Math.round(energy / animals.size());
     }
-    public int getFreeSpace(){
+
+    public int getFreeSpace() {
         HashMap<Vector2d, Integer> occupied = new HashMap<Vector2d, Integer>();
 
-
-        for (Plant plant : plants) {
-            occupied.put(plant.getPosition(), 0);
+        for (Vector2d position : plants.keySet()) {
+            occupied.put(position, 0);
         }
         for (Map.Entry<Vector2d, List<Animal>> entry : animals.entrySet()) {
             occupied.put(entry.getKey(), 0);
         }
-        return  size.getWidth()*size.getHeight() - occupied.size() ;
+        return size.getWidth() * size.getHeight() - occupied.size();
 
     }
 
@@ -239,8 +251,8 @@ public int getDays(){
             lifespan += animal.getTimeAlive();
             System.out.println(animal.getTimeAlive());
         }
-            System.out.println(lifespan + " " + getDeadAnimals().size());
-        return Math.round(lifespan / getDeadAnimals().size());
+        System.out.println(lifespan + " " + getDeadAnimals().size());
+        return Math.round(lifespan / getDeadAnimals().size() * 10) / 10.0;
 
     }
 
@@ -251,13 +263,16 @@ public int getDays(){
 
     @Override
     public void cleanCorpses() {
-
+        for ( Animal corpse : corpses ) {
+            cleanCorpse(corpse);
+        }
+        corpses.clear();
     }
 
     @Override
-    public void moveAllAnimals() {
-        getAnimals().forEach(Animal::move);
-        days+=1;
+    public void moveAllAnimals(int moveCost) {
+        getAnimals().forEach( a -> a.move(moveCost));
+        days += 1;
     }
 
     @Override
@@ -288,10 +303,9 @@ public int getDays(){
     }
 
     @Override
-    public void regrowPlants(int count) {
-
+    public void regrowPlants(int amount, int energy) {
+        createNPlants(amount, energy);
     }
-
 
 
 }

@@ -31,12 +31,14 @@ public class Animal extends AbstractMapElement implements Comparable<Animal> {
     private int timeAlive = 0;
     private int plantsEaten = 0;
     private int kids = 0;
+    public Vector2d prevPosition;
 
     public Animal(WorldMap map, Vector2d position, int energy, int genomeLength, int mutationsMin, int mutationsMax,
                   INextGene nextGeneGenerator, IGeneMutator geneMutator) {
         this.map = map;
         addObserver(map);
         this.position = position;
+        this.prevPosition = position;
         this.energy = energy;
         this.mutationsMin = mutationsMin;
         this.mutationsMax = mutationsMax;
@@ -61,12 +63,13 @@ public class Animal extends AbstractMapElement implements Comparable<Animal> {
     public Animal(Animal parent1, Animal parent2, int energyFromParent) {
         this.map = parent1.map;
         this.position = parent1.position;
+        this.prevPosition = position;
         this.observerList.addAll(parent1.observerList);
         this.nextGeneGenerator = parent1.nextGeneGenerator;
         this.geneMutator = parent1.geneMutator;
         this.mutationsMin = parent1.mutationsMin;
         this.mutationsMax = parent1.mutationsMax;
-
+        texture = new Image("waspyboi.gif");
 
         int totalEnergy = parent1.energy + parent2.energy;
         int genomeLength = parent1.genome.size();
@@ -95,13 +98,14 @@ public class Animal extends AbstractMapElement implements Comparable<Animal> {
         parent2.kids++;
     }
 
-    public void move() {
+    public void move( int cost ) {
+        this.prevPosition = position;
         timeAlive += 1;
-        notifyObservers(ActionType.POSITION_CHANGED);
         var newLocation = map.newLocation(this.nextPosition());
         this.setPosition(newLocation.newPosition);
-        this.removeEnergy(1 + newLocation.energyCost);
+        this.removeEnergy(cost + newLocation.energyCost);
         activeGene = nextGeneGenerator.NextGene(activeGene, genome.size());
+        notifyObservers(ActionType.POSITION_CHANGED);
     }
 
     public void removeEnergy(int amount) {

@@ -56,7 +56,7 @@ public class App extends Application implements IMapRefreshObserver {
     private IPlantType plantType = new Trees();
     private IGeneMutator mutatorType = new MutatorRandom();
     private INextGene nextGeneType = new NextGeneNormal();
-    private IMapType mapType = new Hell();
+    private IMapType mapType;
 
     @Override
     public void init() {
@@ -104,7 +104,7 @@ public class App extends Application implements IMapRefreshObserver {
 
             Node nodex = this.info.getChildren().get(0);
             this.info.getChildren().clear();
-            this.info.getChildren().add(0, nodex);
+//            this.info.getChildren().add(0, nodex);
             generateMap();
 
         });
@@ -116,15 +116,16 @@ public class App extends Application implements IMapRefreshObserver {
         movesInput.setPrefWidth(Math.floor(600));
         movesInput.setText("");
 
-        Label mapWidthLabel = new Label("mapWidthLabel: ");
+        Label mapWidthLabel = new Label("map width: ");
         mapWidthLabel.setStyle("-fx-text-fill: white");
-        Label mapHeightLabel = new Label("mapHeightLabel: ");
-        Label energyFromGrassLabel = new Label("energyFromGrassLabel: ");
-        Label energyRequiredToReproduceLabel = new Label("energyRequiredToReproduceLabel: ");
-        Label animalStartEnergyLabel = new Label("animalStartEnergyLabel: ");
-        Label grassPerCycleLabel = new Label("grassPerCycleLabel: ");
-        Label energyLostPerCycleLabel = new Label("energyLostPerCycle: ");
-        Label numberOfAnimalsOnStartLabel = new Label("numberOfAnimalsOnStart: ");
+        Label mapHeightLabel = new Label("map height: ");
+        Label energyFromGrassLabel = new Label("energy per plant: ");
+        Label energyRequiredToReproduceLabel = new Label("energy required to reproduce: ");
+        Label animalStartEnergyLabel = new Label("animal starting energy: ");
+        //TODO:remove
+        Label grassPerCycleLabel = new Label("grassPerCycle-depricated: ");
+        Label energyLostPerCycleLabel = new Label("energy lost per cycle: ");
+        Label numberOfAnimalsOnStartLabel = new Label("number of animals: ");
         Label worldTypeLabel = new Label("type of world: ");
         Label nextGeneTypeLabel = new Label("type of nextGene: ");
         Label geneMutatorTypeLabel = new Label("type of geneMutator: ");
@@ -168,7 +169,7 @@ public class App extends Application implements IMapRefreshObserver {
         ComboBox geneMutatorTypeField = new ComboBox();
         geneMutatorTypeField.getItems().addAll(
                 "MutatorRandom",
-                "slightCorrection?" //TODO: where is 'lekka korekta'?
+                "SlightImprovement"
         );
         ComboBox plantTypeField = new ComboBox();
         plantTypeField.getItems().addAll(
@@ -242,7 +243,7 @@ public class App extends Application implements IMapRefreshObserver {
             }
             Object mp = worldTypeField.getValue();
             if ("hell".equals(mp)) {
-                this.mapType = new Hell();
+                this.mapType = new Hell(this.energyToReproduce);
             } else if ("round".equals(mp)) {
                 this.mapType = new Earth();
             }
@@ -250,11 +251,11 @@ public class App extends Application implements IMapRefreshObserver {
             if ("MutatorRandom".equals(gm)) {
                 this.mutatorType = new MutatorRandom();
             } else if ("slightCorrection".equals(gm)) {
-                this.mutatorType = new MutatorRandom(); //TODO: cahnge when inplemented
+                this.mutatorType = new SlightImprovement();
             }
             Object ng = geneMutatorTypeField.getValue();
             if ("nextGeneCreazy".equals(ng)) {
-                this.nextGeneType = new NextGeneNormal(); //TODO: change when inplemented
+                this.nextGeneType = new NextGeneCrazy();
             } else if ("NextGeneNormal".equals(ng)) {
                 this.nextGeneType = new NextGeneNormal();
             }
