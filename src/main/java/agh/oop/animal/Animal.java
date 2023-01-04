@@ -9,13 +9,13 @@ import agh.oop.map.WorldMap;
 import agh.oop.plant.Plant;
 import agh.oop.plant.Trees;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
+
 import javafx.scene.image.Image;
 
 
@@ -98,7 +98,7 @@ public class Animal extends AbstractMapElement implements Comparable<Animal> {
         parent2.kids++;
     }
 
-    public void move( int cost ) {
+    public void move(int cost) {
         this.prevPosition = position;
         timeAlive += 1;
         var newLocation = map.newLocation(this.nextPosition());
@@ -123,11 +123,18 @@ public class Animal extends AbstractMapElement implements Comparable<Animal> {
     public void addEnergy(int amount) {
         energy += amount;
     }
+
     public int getActiveGene() {
         return activeGene;
     }
-    public void getNextGene(){ //could be used for more friendly animal rotation?
+
+    public void getNextGene() { //could be used for more friendly animal rotation?
 //        return nextGene()?
+    }
+
+    public int getNextDirection() {
+        return MapDirection.fromNumber(genome.get(activeGene)).toDirection();
+
     }
 
     public int getTimeAlive() {
