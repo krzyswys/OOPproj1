@@ -308,31 +308,31 @@ public class App extends Application implements IMapRefreshObserver {
 
     }
     public void updateInfo() {
-        Label allAnimals = new Label("Aktualna ilosc zwierzat: "+this.engine.map.getAnimals().size() + "");
+        Label allAnimals = new Label("ilosc zwierzat: "+this.engine.map.getAnimals().size() + "");
         allAnimals.setStyle("-fx-text-fill: white");
         this.info.add(allAnimals, 2,0,span,span);
 
-        Label allPlants = new Label("Aktualna ilosc roslin: "+this.engine.map.getPlants().size() + "");
+        Label allPlants = new Label("ilosc roslin: "+this.engine.map.getPlants().size() + "");
         allPlants.setStyle("-fx-text-fill: white");
         this.info.add(allPlants, 2,1,span,span);
 
-        Label allFreeSpace = new Label("Aktualna ilosc wolnych miejsc: "+this.engine.map.getFreeSpace() + "");
+        Label allFreeSpace = new Label("ilosc wolnych miejsc: "+this.engine.map.getFreeSpace() + "");
         allFreeSpace.setStyle("-fx-text-fill: white");
         this.info.add(allFreeSpace, 2,2,span,span);
 
-        Label gene = new Label("Aktualna najpopularniejszy gen: "+this.engine.map.getTopGeneFromAllGenomes() + "");
+        Label gene = new Label("najpopularniejszy gen: "+this.engine.map.getTopGeneFromAllGenomes() + "");
         gene.setStyle("-fx-text-fill: white");
         this.info.add(gene, 2,3,span,span);
 
-        Label avg = new Label("Aktualna srednia energi dla zyjacych zwierzat: "+this.engine.map.getAverageEnergy() + "");
+        Label avg = new Label("srednia energi dla zyjacych zwierzat: "+this.engine.map.getAverageEnergy() + "");
         avg.setStyle("-fx-text-fill: white");
         this.info.add(avg, 2,4,span,span);
 
-        Label avgLife = new Label("Aktualna snrednia dlugosc zycia martwych zwierzat: "+this.engine.map.getAverageLifespan() + "");
+        Label avgLife = new Label("Srednia dlugosc zycia martwych zwierzat: "+this.engine.map.getAverageLifespan() + "");
         avgLife.setStyle("-fx-text-fill: white");
         this.info.add(avgLife, 2,5,span,span);
 
-        Label days = new Label("Aktualna liczba dni: "+this.engine.map.getDays() + "");
+        Label days = new Label(" liczba dni: "+this.engine.map.getDays() + "");
         this.info.add(days, 2,6,span,span);
         days.setStyle("-fx-text-fill: white");
 
