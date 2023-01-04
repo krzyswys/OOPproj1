@@ -28,7 +28,9 @@ public enum MapDirection {
             case NORTH_WEST -> new Vector2d(-1, 1);
         };
     }
-
+    public int toDirection(){
+        return value;
+    }
     public static MapDirection fromNumber(int x) {
         for (MapDirection d : MapDirection.values()) {
             if (d.value == x) {
