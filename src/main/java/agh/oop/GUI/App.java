@@ -376,12 +376,14 @@ public class App extends Application implements IMapRefreshObserver {
                     selectedAnimal.setNormal();
                     selectedAnimal = d;
                     selectedAnimal.setSelected();
+                    info_right.getChildren().clear();
+                    updateInfo_right();
                     event.consume();
                 }
             });
 
             int head = d.getNextDirection();
-            head = (head + 9 + 5) % 8;
+            head = (head + 6) % 8;
             switch (Integer.toString(head)) { // FIXME: getAcriveGene returns same value for all animals
                 case "0" -> field.setRotate(0);
                 case "1" -> field.setRotate(-45);

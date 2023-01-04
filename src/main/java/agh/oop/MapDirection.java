@@ -43,14 +43,14 @@ public enum MapDirection {
     @Override
     public String toString() {
         return switch (this.value) {
-            case 0 -> "gora";
-            case 1 -> "prawo gora";
+            case 0 -> "dol";
+            case 1 -> "prawo dol";
             case 2 -> "prawo";
-            case 3 -> "prawo dol";
-            case 4 -> "dol";
-            case 5 -> "lewo dol";
+            case 3 -> "prawo gora";
+            case 4 -> "gora";
+            case 5 -> "lewo gora";
             case 6 -> "lewo";
-            case 7 -> "lewo gora";
+            case 7 -> "lewo dol";
             default -> throw new IllegalStateException("Unexpected value: " + this.value);
         };
     }
