@@ -40,4 +40,18 @@ public enum MapDirection {
         throw new IndexOutOfBoundsException(x + " is not a vaild MapDirection");
     }
 
+    @Override
+    public String toString() {
+        return switch (this.value) {
+            case 0 -> "gora";
+            case 1 -> "prawo gora";
+            case 2 -> "prawo";
+            case 3 -> "prawo dol";
+            case 4 -> "dol";
+            case 5 -> "lewo dol";
+            case 6 -> "lewo";
+            case 7 -> "lewo gora";
+            default -> throw new IllegalStateException("Unexpected value: " + this.value);
+        };
+    }
 }

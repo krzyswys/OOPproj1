@@ -3,33 +3,29 @@ package agh.oop.GUI;
 import agh.oop.MapDirection;
 import agh.oop.SimulationEngine;
 import agh.oop.animal.*;
-import agh.oop.map.*;
+import agh.oop.map.IMapRefreshObserver;
+import agh.oop.map.IMapType;
+import agh.oop.map.MapSize;
 import agh.oop.plant.IPlantType;
 import agh.oop.plant.Plant;
-import agh.oop.plant.Toxic;
 import agh.oop.plant.Trees;
-import com.sun.jdi.InterfaceType;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import javafx.stage.Stage;
-import javafx.geometry.HPos;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
-import java.io.File;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
 
 public class App extends Application implements IMapRefreshObserver {
@@ -59,6 +55,11 @@ public class App extends Application implements IMapRefreshObserver {
     private INextGene nextGeneType = new NextGeneNormal();
     private IMapType mapType;
     private Stage mainStage;
+    private int genomeLenght;
+    private int minMutations;
+    private int maxMutations;
+    private Animal selectedAnimal;
+    Thread engineThread;
 
     @Override
     public void init() {
@@ -120,7 +121,10 @@ public class App extends Application implements IMapRefreshObserver {
         });
     }
 
-    public void setupInfo( int width, int height, int energyFromGrass, int energyToReproduce, int animalStartEnergy, int grasPerCycle, int energyLostPerCycle, int numberOfAnimalsOnStart, IPlantType plantType, IGeneMutator mutatorType, INextGene nextGeneType, IMapType mapType, int cols, int rows, int cellSize, int animalImgSize, int imgSize){
+    public void setupInfo( int width, int height, int energyFromGrass, int energyToReproduce, int animalStartEnergy,
+                           int grasPerCycle, int energyLostPerCycle, int numberOfAnimalsOnStart, IPlantType plantType,
+                           IGeneMutator mutatorType, INextGene nextGeneType, IMapType mapType, int cols, int rows,
+                           int cellSize, int animalImgSize, int imgSize, int genomeLenght, int minMutations, int maxMutations){
         this.width=width;
         this.height=height;
         this.energyFromGrass=energyFromGrass;
@@ -138,6 +142,10 @@ public class App extends Application implements IMapRefreshObserver {
         this.cellSize = cellSize;
         this.animalImgSize = animalImgSize;
         this.imgSize = imgSize;
+        this.genomeLenght = genomeLenght;
+        this.minMutations = minMutations;
+        this.maxMutations = maxMutations;
+
         System.out.println(energyFromGrass);
         start(new Stage());
 
@@ -145,16 +153,19 @@ public class App extends Application implements IMapRefreshObserver {
 
     public GridPane setupStart() {
 
-            this.engine = new SimulationEngine(new MapSize(this.width, this.height), this.mutatorType, this.nextGeneType, this.mapType, this.plantType, this.numberOfAnimalsOnStart, 40, this.animalStartEnergy, this.energyFromGrass, this.energyToReproduce, this.grasPerCycle, this.energyLostPerCycle);
+            this.engine = new SimulationEngine(new MapSize(this.width, this.height), this.mutatorType, this.nextGeneType,
+                    this.mapType, this.plantType, this.numberOfAnimalsOnStart, 40, this.animalStartEnergy,
+                    this.energyFromGrass, this.energyToReproduce, this.grasPerCycle, this.energyLostPerCycle,
+                    this.genomeLenght, this.minMutations, this.maxMutations);
             this.plants = engine.getplants();
             this.animals = engine.getanimals();
             this.engine.addObserverMap(this);
 
             this.engine.run();
-            updateInfo();
-            updateInfo_right();
+            selectedAnimal = engine.map.getAnimals().get(0);
+            this.selectedAnimal.setSelected();
             generateMap();
-            Thread engineThread = new Thread(this.engine);
+            engineThread = new Thread(this.engine);
             engineThread.start();
 
             Button btn = new Button("stop");
@@ -165,29 +176,8 @@ public class App extends Application implements IMapRefreshObserver {
             btn2.setOnAction(ac -> {
                 engineThread.resume();
             });
-            Button newSimulationBtn = new Button("new simulation");
-            //FIXME: merge it into one btn and replace --
-            newSimulationBtn.setOnAction(ac -> {
-
-                Stage new_stage = new Stage();
-                HBox hBox = new HBox();
-                GridPane txtx = setupStart();
-                hBox.getChildren().addAll(txtx);
-                hBox.setAlignment(Pos.CENTER);
-                hBox.setStyle("-fx-font-size: 20px");
-                VBox vBox = new VBox();
-                vBox.getChildren().addAll(hBox);
-                vBox.setAlignment(Pos.CENTER);
-                vBox.setStyle("-fx-background-color: #56565e;");
-
-                VBox.setMargin(hBox, new Insets(10, 0, 50, 0));
-                Scene scene = new Scene(vBox, 720, 780);
-                new_stage.setScene(scene);
-                new_stage.setTitle("World");
-                new_stage.show();
-            });
             HBox hBox = new HBox();
-            hBox.getChildren().addAll(this.info,btn, btn2,newSimulationBtn, this.info_right);
+            hBox.getChildren().addAll(this.info,btn, btn2, this.info_right);
             hBox.setAlignment(Pos.CENTER);
 
 
@@ -236,6 +226,13 @@ public class App extends Application implements IMapRefreshObserver {
 
     @Override
     public void start(Stage primaryStage) {
+        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent e) {
+                engineThread.stop();
+            }
+        });
+
         mainStage = primaryStage;
         HBox hBox = new HBox();
         GridPane txt = setupStart();
@@ -263,40 +260,38 @@ public class App extends Application implements IMapRefreshObserver {
         }
     }
     public void updateInfo_right() {
-//        for (int i = 0; i < rows - 1; i++) {
-//            this.info.getColumnConstraints().add(new ColumnConstraints(200));
-//        }
-//        for (int i = 0; i < cols - 1; i++) {
-//            this.info.getRowConstraints().add(new RowConstraints(200));
-//        }
 
-        Label allAnimals = new Label("Aktualna ilosc zwierzat: "+this.engine.map.getAnimals().size() + "");
+        Label allAnimals = new Label("Aktualna pozycja: "+ selectedAnimal.getPosition() + "");
         allAnimals.setStyle("-fx-text-fill: white");
         this.info_right.add(allAnimals, 2,0,span,span);
 
-        Label allPlants = new Label("Aktualna ilosc roslin: "+this.engine.map.getPlants().size() + "");
+        Label allPlants = new Label("Aktualna ilosc energii: "+ selectedAnimal.getEnergy() + "");
         allPlants.setStyle("-fx-text-fill: white");
         this.info_right.add(allPlants, 2,1,span,span);
 
-        Label allFreeSpace = new Label("Aktualna ilosc wolnych miejsc: "+this.engine.map.getFreeSpace() + "");
-        allFreeSpace.setStyle("-fx-text-fill: white");
-        this.info_right.add(allFreeSpace, 2,2,span,span);
-
-        Label gene = new Label("Aktualna najpopularniejszy gen: "+this.engine.map.getTopGeneFromAllGenomes() + "");
+        Label gene = new Label("Genotyp: "+ selectedAnimal.getGenome() + "");
         gene.setStyle("-fx-text-fill: white");
         this.info_right.add(gene, 2,3,span,span);
 
-        Label avg = new Label("Aktualna srednia energi dla zyjacych zwierzat: "+this.engine.map.getAverageEnergy() + "");
+        Label avg = new Label("Aktywny gen: "+ selectedAnimal.getActiveGene() + "");
         avg.setStyle("-fx-text-fill: white");
         this.info_right.add(avg, 2,4,span,span);
 
-        Label avgLife = new Label("Aktualna snrednia dlugosc zycia martwych zwierzat: "+this.engine.map.getAverageLifespan() + "");
-        avgLife.setStyle("-fx-text-fill: white");
-        this.info_right.add(avgLife, 2,5,span,span);
+        Label kids = new Label("Liczba dzieci: "+ selectedAnimal.getKids() + "");
+        kids.setStyle("-fx-text-fill: white");
+        this.info_right.add(kids, 2,5,span,span);
 
-        Label days = new Label("Aktualna liczba dni: "+this.engine.map.getDays() + "");
+        Label days = new Label("Dlugosc zycia: "+ selectedAnimal.getTimeAlive() + "");
         this.info_right.add(days, 2,6,span,span);
         days.setStyle("-fx-text-fill: white");
+
+        Label plants = new Label("Zjedzone rosliny: "+ selectedAnimal.getPlantsEaten() + "");
+        plants.setStyle("-fx-text-fill: white");
+        this.info_right.add(plants, 2,7,span,span);
+
+        Label direction = new Label("Zwrot: "+ MapDirection.fromNumber((selectedAnimal.getNextDirection())).toString() + "");
+        direction.setStyle("-fx-text-fill: white");
+        this.info_right.add(direction, 2,8,span,span);
 
         var images = new Image("border_textures/wblocks.jpg", true);
         var bgImages = new BackgroundImage(
@@ -375,19 +370,27 @@ public class App extends Application implements IMapRefreshObserver {
             view.setFitHeight(animalImgSize);
             view.setPreserveRatio(true);
             field.setGraphic(view);
-
+            field.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+                @Override
+                public void handle(MouseEvent event) {
+                    selectedAnimal.setNormal();
+                    selectedAnimal = d;
+                    selectedAnimal.setSelected();
+                    event.consume();
+                }
+            });
 
             int head = d.getNextDirection();
+            head = (head + 9 + 5) % 8;
             switch (Integer.toString(head)) { // FIXME: getAcriveGene returns same value for all animals
-
                 case "0" -> field.setRotate(0);
-                case "1" -> field.setRotate(45);
-                case "2" -> field.setRotate(90);
-                case "3" -> field.setRotate(135);
-                case "4" -> field.setRotate(180);
-                case "5" -> field.setRotate(225);
-                case "6" -> field.setRotate(270);
-                case "7" -> field.setRotate(315);
+                case "1" -> field.setRotate(-45);
+                case "2" -> field.setRotate(-90);
+                case "3" -> field.setRotate(-135);
+                case "4" -> field.setRotate(-180);
+                case "5" -> field.setRotate(-225);
+                case "6" -> field.setRotate(-270);
+                case "7" -> field.setRotate(-315);
             }
 
             this.grid.add(field, d.getPosition().x + 1, d.getPosition().y + 1, span, span);

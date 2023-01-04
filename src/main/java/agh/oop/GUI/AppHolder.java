@@ -10,6 +10,8 @@ import agh.oop.plant.IPlantType;
 import agh.oop.plant.Toxic;
 import agh.oop.plant.Trees;
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -20,6 +22,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 public class AppHolder extends Application {
     int span=1;
@@ -43,6 +46,13 @@ public class AppHolder extends Application {
     private SimulationEngine engine;
     @Override
     public void start(Stage primaryStage) throws Exception {
+        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent e) {
+                Platform.exit();
+                System.exit(0);
+            }
+        });
         TextField movesInput = new TextField();
         movesInput.setPrefWidth(Math.floor(600));
         movesInput.setText("");
@@ -53,8 +63,10 @@ public class AppHolder extends Application {
         Label energyFromGrassLabel = new Label("energy per plant: ");
         Label energyRequiredToReproduceLabel = new Label("energy required to reproduce: ");
         Label animalStartEnergyLabel = new Label("animal starting energy: ");
-        //TODO:remove
-        Label grassPerCycleLabel = new Label("grassPerCycle-depricated: ");
+        Label genomeLengthLabel = new Label("dlugosc genow: ");
+        Label mutationsMinLabel = new Label("min mutacje: ");
+        Label mutationsMaxLabel = new Label("max mutacje: ");
+        Label grassPerCycleLabel = new Label("roslinny dziennie : ");
         Label energyLostPerCycleLabel = new Label("energy lost per cycle: ");
         Label numberOfAnimalsOnStartLabel = new Label("number of animals: ");
         Label worldTypeLabel = new Label("type of world: ");
@@ -67,6 +79,9 @@ public class AppHolder extends Application {
         energyFromGrassLabel.setStyle("-fx-text-fill: white");
         energyRequiredToReproduceLabel.setStyle("-fx-text-fill: white");
         animalStartEnergyLabel.setStyle("-fx-text-fill: white");
+        genomeLengthLabel.setStyle("-fx-text-fill: white");
+        mutationsMinLabel.setStyle("-fx-text-fill: white");
+        mutationsMaxLabel.setStyle("-fx-text-fill: white");
         grassPerCycleLabel.setStyle("-fx-text-fill: white");
         energyLostPerCycleLabel.setStyle("-fx-text-fill: white");
         numberOfAnimalsOnStartLabel.setStyle("-fx-text-fill: white");
@@ -79,10 +94,13 @@ public class AppHolder extends Application {
 
         TextField mapWidthField = new TextField("20");
         TextField mapHeightField = new TextField("20");
-        TextField energyFromGrassField = new TextField("5");
-        TextField energyRequiredToReproduceField = new TextField("30");
+        TextField energyFromGrassField = new TextField("9");
+        TextField energyRequiredToReproduceField = new TextField("20");
         TextField animalStartEnergyField = new TextField("15");
-        TextField grassPerCycleField = new TextField("1");
+        TextField genomeLengthField = new TextField("10");
+        TextField mutationsMinField = new TextField("1");
+        TextField mutationsMaxField = new TextField("3");
+        TextField grassPerCycleField = new TextField("15");
         TextField energyLostPerCycleField = new TextField("1");
         TextField numberOfAnimalsOnStartField = new TextField("35");
 //
@@ -95,7 +113,7 @@ public class AppHolder extends Application {
         nextGeneTypeField.getItems().addAll(
                 "NextGeneNormal",
 
-                "nextGeneCreazy" //TODO: not implemented
+                "nextGeneCreazy"
         );
         ComboBox geneMutatorTypeField = new ComboBox();
         geneMutatorTypeField.getItems().addAll(
@@ -104,8 +122,8 @@ public class AppHolder extends Application {
         );
         ComboBox plantTypeField = new ComboBox();
         plantTypeField.getItems().addAll(
-                "Toxic",
-                "Trees"
+                "Trees",
+                "Toxic"
         );
 
 
@@ -130,23 +148,32 @@ public class AppHolder extends Application {
         txt.add(animalStartEnergyLabel, 0, 4, span, span);
         txt.add(animalStartEnergyField, 1, 4, span, span);
 
-        txt.add(grassPerCycleLabel, 0, 5, span, span);
-        txt.add(grassPerCycleField, 1, 5, span, span);
+        txt.add(genomeLengthLabel, 0, 5, span, span);
+        txt.add(genomeLengthField, 1, 5, span, span);
 
-        txt.add(energyLostPerCycleLabel, 0, 6, span, span);
-        txt.add(energyLostPerCycleField, 1, 6, span, span);
+        txt.add(mutationsMinLabel, 0, 6, span, span);
+        txt.add(mutationsMinField, 1, 6, span, span);
 
-        txt.add(numberOfAnimalsOnStartLabel, 0, 7, span, span);
-        txt.add(numberOfAnimalsOnStartField, 1, 7, span, span);
+        txt.add(mutationsMaxLabel, 0, 7, span, span);
+        txt.add(mutationsMaxField, 1, 7, span, span);
 
-        txt.add(worldTypeLabel, 0, 8, span, span);
-        txt.add(worldTypeField, 1, 8, span, span);
-        txt.add(nextGeneTypeLabel, 0, 9, span, span);
-        txt.add(nextGeneTypeField, 1, 9, span, span);
-        txt.add(geneMutatorTypeLabel, 0, 10, span, span);
-        txt.add(geneMutatorTypeField, 1, 10, span, span);
-        txt.add(plantTypeLabel, 0, 11, span, span);
-        txt.add(plantTypeField, 1, 11, span, span);
+        txt.add(grassPerCycleLabel, 0, 8, span, span);
+        txt.add(grassPerCycleField, 1, 8, span, span);
+
+        txt.add(energyLostPerCycleLabel, 0, 9, span, span);
+        txt.add(energyLostPerCycleField, 1, 9, span, span);
+
+        txt.add(numberOfAnimalsOnStartLabel, 0, 10, span, span);
+        txt.add(numberOfAnimalsOnStartField, 1, 10, span, span);
+
+        txt.add(worldTypeLabel, 0, 11, span, span);
+        txt.add(worldTypeField, 1, 11, span, span);
+        txt.add(nextGeneTypeLabel, 0, 12, span, span);
+        txt.add(nextGeneTypeField, 1, 12, span, span);
+        txt.add(geneMutatorTypeLabel, 0, 13, span, span);
+        txt.add(geneMutatorTypeField, 1, 13, span, span);
+        txt.add(plantTypeLabel, 0, 14, span, span);
+        txt.add(plantTypeField, 1, 14, span, span);
 
         var images = new Image("border_textures/wbricks.jpg", true);
         var bgImages = new BackgroundImage(
@@ -203,7 +230,10 @@ public class AppHolder extends Application {
             }
 
             App newInstance = new App();
-            newInstance.setupInfo(width, height, energyFromGrass, energyToReproduce,animalStartEnergy, grasPerCycle, energyLostPerCycle, numberOfAnimalsOnStart, plantType,mutatorType, nextGeneType, mapType, cols, rows, cellSize, animalImgSize, imgSize );
+            newInstance.setupInfo(width, height, energyFromGrass, energyToReproduce,animalStartEnergy, grasPerCycle,
+                    energyLostPerCycle, numberOfAnimalsOnStart, plantType,mutatorType, nextGeneType, mapType, cols, rows,
+                    cellSize, animalImgSize, imgSize, Integer.parseInt(genomeLengthField.getText()),
+                    Integer.parseInt(mutationsMinField.getText()), Integer.parseInt(mutationsMaxField.getText()) );
 
         });
         HBox hBox = new HBox();

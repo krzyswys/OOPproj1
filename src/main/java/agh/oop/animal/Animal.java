@@ -133,7 +133,7 @@ public class Animal extends AbstractMapElement implements Comparable<Animal> {
     }
 
     public int getNextDirection() {
-        return MapDirection.fromNumber(genome.get(activeGene)).toDirection();
+        return genome.get(activeGene);
 
     }
 
@@ -214,5 +214,12 @@ public class Animal extends AbstractMapElement implements Comparable<Animal> {
                 .thenComparing(Animal::getTimeAlive)
                 .thenComparing(Animal::getKids)
                 .compare(this, o);
+    }
+
+    public void setSelected() {
+        this.texture = new Image("animal_textures/bee.png");
+    }
+    public void setNormal() {
+        this.texture = texture = new Image("waspyboi.gif");
     }
 }
