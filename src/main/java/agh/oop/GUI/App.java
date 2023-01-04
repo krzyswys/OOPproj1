@@ -38,6 +38,7 @@ public class App extends Application implements IMapRefreshObserver {
     public int span = 1;
     final GridPane grid = new GridPane();
     final GridPane info = new GridPane();
+    final GridPane info_right = new GridPane();
     GridPane startMenu = new GridPane();
     SimulationEngine engine;
     private int width;
@@ -74,12 +75,12 @@ public class App extends Application implements IMapRefreshObserver {
         this.animals = engine.getanimals();
         addConstaints();
         updateInfo();
+        updateInfo_right();
         populateWorld();
     }
 
     @Override
     public void refresh() { // possibly can be replaced by antoher call: https://stackoverflow.com/questions/25873769/launch-javafx-application-from-another-class
-        System.out.println("sheesh");
 
         Platform.runLater(() -> {
 
@@ -104,6 +105,17 @@ public class App extends Application implements IMapRefreshObserver {
             }
 
             this.info.getChildren().clear();
+
+            while (this.info_right.getRowConstraints().size() > 0) {
+                this.info_right.getRowConstraints().remove(0);
+            }
+
+            while (this.info_right.getColumnConstraints().size() > 0) {
+                this.info_right.getColumnConstraints().remove(0);
+            }
+
+            this.info_right.getChildren().clear();
+
             generateMap();
         });
     }
@@ -140,6 +152,7 @@ public class App extends Application implements IMapRefreshObserver {
 
             this.engine.run();
             updateInfo();
+            updateInfo_right();
             generateMap();
             Thread engineThread = new Thread(this.engine);
             engineThread.start();
@@ -152,8 +165,29 @@ public class App extends Application implements IMapRefreshObserver {
             btn2.setOnAction(ac -> {
                 engineThread.resume();
             });
+            Button newSimulationBtn = new Button("new simulation");
+            //FIXME: merge it into one btn and replace --
+            newSimulationBtn.setOnAction(ac -> {
+
+                Stage new_stage = new Stage();
+                HBox hBox = new HBox();
+                GridPane txtx = setupStart();
+                hBox.getChildren().addAll(txtx);
+                hBox.setAlignment(Pos.CENTER);
+                hBox.setStyle("-fx-font-size: 20px");
+                VBox vBox = new VBox();
+                vBox.getChildren().addAll(hBox);
+                vBox.setAlignment(Pos.CENTER);
+                vBox.setStyle("-fx-background-color: #56565e;");
+
+                VBox.setMargin(hBox, new Insets(10, 0, 50, 0));
+                Scene scene = new Scene(vBox, 720, 780);
+                new_stage.setScene(scene);
+                new_stage.setTitle("World");
+                new_stage.show();
+            });
             HBox hBox = new HBox();
-            hBox.getChildren().addAll(this.info,btn, btn2);
+            hBox.getChildren().addAll(this.info,btn, btn2,newSimulationBtn, this.info_right);
             hBox.setAlignment(Pos.CENTER);
 
 
@@ -170,6 +204,7 @@ public class App extends Application implements IMapRefreshObserver {
 
             tmp2.add(this.info, 0,0,span,span);
             tmp2.add(vBox, 1,0, span,span);
+            tmp2.add(this.info_right, 2,0,span,span);
 
 
             VBox vBoxx = new VBox();
@@ -227,7 +262,56 @@ public class App extends Application implements IMapRefreshObserver {
             this.grid.getRowConstraints().add(new RowConstraints(cellSize));
         }
     }
+    public void updateInfo_right() {
+//        for (int i = 0; i < rows - 1; i++) {
+//            this.info.getColumnConstraints().add(new ColumnConstraints(200));
+//        }
+//        for (int i = 0; i < cols - 1; i++) {
+//            this.info.getRowConstraints().add(new RowConstraints(200));
+//        }
 
+        Label allAnimals = new Label("Aktualna ilosc zwierzat: "+this.engine.map.getAnimals().size() + "");
+        allAnimals.setStyle("-fx-text-fill: white");
+        this.info_right.add(allAnimals, 2,0,span,span);
+
+        Label allPlants = new Label("Aktualna ilosc roslin: "+this.engine.map.getPlants().size() + "");
+        allPlants.setStyle("-fx-text-fill: white");
+        this.info_right.add(allPlants, 2,1,span,span);
+
+        Label allFreeSpace = new Label("Aktualna ilosc wolnych miejsc: "+this.engine.map.getFreeSpace() + "");
+        allFreeSpace.setStyle("-fx-text-fill: white");
+        this.info_right.add(allFreeSpace, 2,2,span,span);
+
+        Label gene = new Label("Aktualna najpopularniejszy gen: "+this.engine.map.getTopGeneFromAllGenomes() + "");
+        gene.setStyle("-fx-text-fill: white");
+        this.info_right.add(gene, 2,3,span,span);
+
+        Label avg = new Label("Aktualna srednia energi dla zyjacych zwierzat: "+this.engine.map.getAverageEnergy() + "");
+        avg.setStyle("-fx-text-fill: white");
+        this.info_right.add(avg, 2,4,span,span);
+
+        Label avgLife = new Label("Aktualna snrednia dlugosc zycia martwych zwierzat: "+this.engine.map.getAverageLifespan() + "");
+        avgLife.setStyle("-fx-text-fill: white");
+        this.info_right.add(avgLife, 2,5,span,span);
+
+        Label days = new Label("Aktualna liczba dni: "+this.engine.map.getDays() + "");
+        this.info_right.add(days, 2,6,span,span);
+        days.setStyle("-fx-text-fill: white");
+
+        var images = new Image("border_textures/wblocks.jpg", true);
+        var bgImages = new BackgroundImage(
+                images,
+                BackgroundRepeat.REPEAT,
+                BackgroundRepeat.REPEAT,
+                BackgroundPosition.DEFAULT,
+                new BackgroundSize(30, 30, false, false, false, false)
+
+        );
+
+        info_right.setStyle("-fx-font-size: 20px");
+        info_right.setBackground(new Background(bgImages));
+
+    }
     public void updateInfo() {
         Label allAnimals = new Label("Aktualna ilosc zwierzat: "+this.engine.map.getAnimals().size() + "");
         allAnimals.setStyle("-fx-text-fill: white");
@@ -292,7 +376,10 @@ public class App extends Application implements IMapRefreshObserver {
             view.setPreserveRatio(true);
             field.setGraphic(view);
 
-            switch (d.toString()) { // FIXME: getAcriveGene returns same value for all animals
+
+            int head = d.getNextDirection();
+            switch (Integer.toString(head)) { // FIXME: getAcriveGene returns same value for all animals
+
                 case "0" -> field.setRotate(0);
                 case "1" -> field.setRotate(45);
                 case "2" -> field.setRotate(90);
