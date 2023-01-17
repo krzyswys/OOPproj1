@@ -226,12 +226,7 @@ public class App extends Application implements IMapRefreshObserver {
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent e) {
-                engineThread.stop();
-            }
-        });
+        primaryStage.setOnCloseRequest(e -> engineThread.stop());
 
         mainStage = primaryStage;
         HBox hBox = new HBox();
@@ -370,16 +365,14 @@ public class App extends Application implements IMapRefreshObserver {
             view.setFitHeight(animalImgSize);
             view.setPreserveRatio(true);
             field.setGraphic(view);
-            field.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-                @Override
-                public void handle(MouseEvent event) {
-                    selectedAnimal.setNormal();
-                    selectedAnimal = d;
-                    selectedAnimal.setSelected();
-                    info_right.getChildren().clear();
-                    updateInfo_right();
-                    event.consume();
-                }
+            field.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+                selectedAnimal.setNormal();
+                selectedAnimal = d;
+                selectedAnimal.setSelected();
+                info_right.getChildren().clear();
+                updateInfo_right();
+                refresh();
+                event.consume();
             });
 
             int head = d.getNextDirection();

@@ -57,12 +57,9 @@ public class AppHolder extends Application {
         primaryStage.show();
     }
     public VBox setupMenu(Stage primaryStage) {
-        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent e) {
-                Platform.exit();
-                System.exit(0);
-            }
+        primaryStage.setOnCloseRequest(e -> {
+            Platform.exit();
+            System.exit(0);
         });
         TextField movesInput = new TextField();
         movesInput.setPrefWidth(Math.floor(600));
@@ -160,7 +157,7 @@ public class AppHolder extends Application {
                 this.mapTypeArr = new String[]{ "World", "Hell",};
                 this.width = 10;
                 this.height = 10;
-                this.energyFromGrass = 7;
+                this.energyFromGrass = 20;
                 this.energyToReproduce = 36;
                 this.animalStartEnergy = 17;
                 this.grasPerCycle = 20;
@@ -175,7 +172,7 @@ public class AppHolder extends Application {
                 this.mapTypeArr = new String[]{ "World", "Hell",};
                 this.width = 15;
                 this.height = 15;
-                this.energyFromGrass = 3;
+                this.energyFromGrass = 6;
                 this.energyToReproduce = 20;
                 this.animalStartEnergy = 10;
                 this.grasPerCycle = 0;
