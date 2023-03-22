@@ -1,1 +1,1 @@
-# OOPproj1
+# This is the second, group project done for assignment for object oriented programing course at AGH university. It is an evolution simulation where animals can navigate on the given map, eat food, procreate and die if their energy falls below set points. https://github.com/apohllo/obiektowe-lab
